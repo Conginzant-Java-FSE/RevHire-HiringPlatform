@@ -1,6 +1,8 @@
 package com.example.revhirehiringplatform.repository;
-import com.revhire.model.Company;
-import com.revhire.model.User;
+
+
+import com.example.revhirehiringplatform.model.Company;
+import com.example.revhirehiringplatform.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
