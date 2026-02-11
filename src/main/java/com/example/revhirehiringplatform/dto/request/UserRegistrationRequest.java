@@ -1,13 +1,13 @@
-package com.revhire.dto;
+package com.example.revhirehiringplatform.dto.request;
 
-import com.revhire.model.User.Role;
+import com.example.revhirehiringplatform.model.User.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class UserRegistrationDto {
+public class UserRegistrationRequest {
     @NotBlank(message = "Name is required")
     private String name;
 
