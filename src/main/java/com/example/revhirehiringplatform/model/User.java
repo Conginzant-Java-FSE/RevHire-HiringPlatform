@@ -45,6 +45,6 @@ public class User {
     private LocalDateTime updatedAt;
 
     public enum Role {
-        JOB_SEEKER, EMPLOYER, ADMIN
+        JOB_SEEKER, EMPLOYER
     }
 }
