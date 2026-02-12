@@ -26,7 +26,7 @@ public class JobSeekerProfile {
     private String location;
 
     @Column(name = "employment_status")
-    private String employmentStatus; // FRESHER, EMPLOYED, UNEMPLOYED
+    private String employmentStatus;
 
     private String headline;
     private String summary;

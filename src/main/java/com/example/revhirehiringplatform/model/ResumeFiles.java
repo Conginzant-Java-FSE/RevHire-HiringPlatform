@@ -26,7 +26,7 @@ public class ResumeFiles {
     private String fileName;
 
     @Column(name = "file_type")
-    private String fileType; // PDF, DOCX
+    private String fileType;
 
     @Column(name = "file_size")
     private Long fileSize;

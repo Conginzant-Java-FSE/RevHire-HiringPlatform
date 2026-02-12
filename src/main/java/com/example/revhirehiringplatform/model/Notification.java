@@ -28,7 +28,7 @@ public class Notification {
     @Column(nullable = false)
     private String message;
 
-    private String type; // INFO, ALERT, etc.
+    private String type;
 
     @Column(name = "is_read")
     private boolean isRead = false;
