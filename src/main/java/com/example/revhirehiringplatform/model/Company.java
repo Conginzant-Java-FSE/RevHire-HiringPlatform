@@ -72,9 +72,6 @@ public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    // Removed logic where Company had direct User relation (User is now linked via
-    // EmployerProfile)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = true)
     private User createdBy;
