@@ -24,7 +24,7 @@ public class AuditLog {
     @Column(name = "entity_id")
     private Long entityId;
 
-    private String action; // CREATE, UPDATE, DELETE
+    private String action;
 
     @Column(name = "old_value", columnDefinition = "TEXT")
     private String oldValue;
