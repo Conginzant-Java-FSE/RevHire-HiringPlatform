@@ -1,6 +1,6 @@
-package com.revhire.repository;
+package com.example.revhirehiringplatform.repository;
 
-import com.revhire.model.SavedJobs;
+import com.example.revhirehiringplatform.model.SavedJobs;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

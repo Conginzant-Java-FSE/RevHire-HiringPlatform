@@ -1,10 +1,10 @@
-package com.revhire.controller;
+package com.example.revhirehiringplatform.controller;
 
-import com.revhire.dto.response.JobPostResponse;
-import com.revhire.model.User;
-import com.revhire.security.UserDetailsImpl;
-import com.revhire.repository.UserRepository;
-import com.revhire.service.SavedJobsService;
+import com.example.revhirehiringplatform.dto.response.JobPostResponse;
+import com.example.revhirehiringplatform.model.User;
+import com.example.revhirehiringplatform.security.UserDetailsImpl;
+import com.example.revhirehiringplatform.repository.UserRepository;
+import com.example.revhirehiringplatform.service.SavedJobsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

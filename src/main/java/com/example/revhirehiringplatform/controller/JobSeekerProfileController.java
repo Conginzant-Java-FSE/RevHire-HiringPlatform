@@ -1,14 +1,15 @@
-package com.revhire.controller;
+package com.example.revhirehiringplatform.controller;
 
-import com.revhire.dto.request.JobSeekerProfileRequest;
-import com.revhire.dto.response.JobSeekerProfileResponse;
-import com.revhire.dto.request.ResumeTextRequest;
-import com.revhire.model.JobSeekerProfile;
-import com.revhire.model.ResumeText;
-import com.revhire.model.User;
-import com.revhire.security.UserDetailsImpl;
-import com.revhire.repository.UserRepository;
-import com.revhire.service.JobSeekerProfileService;
+
+import com.example.revhirehiringplatform.dto.request.JobSeekerProfileRequest;
+import com.example.revhirehiringplatform.dto.request.ResumeTextRequest;
+import com.example.revhirehiringplatform.dto.response.JobSeekerProfileResponse;
+import com.example.revhirehiringplatform.model.JobSeekerProfile;
+import com.example.revhirehiringplatform.model.ResumeText;
+import com.example.revhirehiringplatform.model.User;
+import com.example.revhirehiringplatform.repository.UserRepository;
+import com.example.revhirehiringplatform.security.UserDetailsImpl;
+import com.example.revhirehiringplatform.service.JobSeekerProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -170,7 +171,7 @@ public class JobSeekerProfileController {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can download resumes.");
         }
         try {
-            com.revhire.model.ResumeFiles resumeFile = resumeService.getResumeFile(seekerId);
+            com.example.revhirehiringplatform.model.ResumeFiles resumeFile = resumeService.getResumeFile(seekerId);
             if (resumeFile == null) {
                 return ResponseEntity.notFound().build(); // No active resume found
             }

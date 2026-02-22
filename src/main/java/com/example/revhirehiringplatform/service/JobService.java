@@ -1,19 +1,19 @@
-package com.revhire.service;
+package com.example.revhirehiringplatform.service;
 
-import com.revhire.dto.request.JobPostRequest;
-import com.revhire.dto.response.JobPostResponse;
-import com.revhire.model.Company;
-import com.revhire.model.EmployerProfile;
-import com.revhire.model.JobPost;
-import com.revhire.model.JobSkillMap;
-import com.revhire.model.SkillsMaster;
-import com.revhire.model.User;
+import com.example.revhirehiringplatform.dto.request.JobPostRequest;
+import com.example.revhirehiringplatform.dto.response.JobPostResponse;
+import com.example.revhirehiringplatform.model.Company;
+import com.example.revhirehiringplatform.model.EmployerProfile;
+import com.example.revhirehiringplatform.model.JobPost;
+import com.example.revhirehiringplatform.model.JobSkillMap;
+import com.example.revhirehiringplatform.model.SkillsMaster;
+import com.example.revhirehiringplatform.model.User;
 
-import com.revhire.repository.CompanyRepository;
-import com.revhire.repository.EmployerProfileRepository;
-import com.revhire.repository.JobPostRepository;
-import com.revhire.repository.JobSkillMapRepository;
-import com.revhire.repository.SkillsMasterRepository;
+import com.example.revhirehiringplatform.repository.CompanyRepository;
+import com.example.revhirehiringplatform.repository.EmployerProfileRepository;
+import com.example.revhirehiringplatform.repository.JobPostRepository;
+import com.example.revhirehiringplatform.repository.JobSkillMapRepository;
+import com.example.revhirehiringplatform.repository.SkillsMasterRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
