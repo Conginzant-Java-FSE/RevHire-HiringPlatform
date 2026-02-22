@@ -26,7 +26,7 @@ import java.util.Optional;
 public class JobSeekerProfileController {
 
     private final JobSeekerProfileService profileService;
-    private final com.revhire.service.JobSeekerResumeService resumeService;
+    private final com.example.revhirehiringplatform.service.JobSeekerResumeService resumeService;
     private final UserRepository userRepository;
 
     private User getUserFromContext(UserDetailsImpl userDetails) {
