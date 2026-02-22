@@ -1,16 +1,23 @@
 package com.example.revhirehiringplatform.controller;
 
-
+import com.example.revhirehiringplatform.dto.response.AuthResponse;
+import com.example.revhirehiringplatform.dto.request.TokenRefreshRequest;
 import com.example.revhirehiringplatform.dto.request.UserLoginRequest;
 import com.example.revhirehiringplatform.dto.request.UserRegistrationRequest;
-import com.example.revhirehiringplatform.dto.response.AuthResponse;
+import com.example.revhirehiringplatform.model.RefreshToken;
 import com.example.revhirehiringplatform.model.User;
+import com.example.revhirehiringplatform.security.JwtUtil;
+import com.example.revhirehiringplatform.security.UserDetailsImpl;
 import com.example.revhirehiringplatform.service.AuthService;
-import jakarta.servlet.http.HttpSession;
+import com.example.revhirehiringplatform.service.RefreshTokenService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,45 +27,76 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationRequest registrationDto,
-                                          HttpSession session) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationRequest registrationDto) {
         try {
-            AuthResponse response = authService.registerUser(registrationDto);
-
-            User user = new User();
-            user.setId(response.getId());
-            user.setEmail(response.getEmail());
-            user.setRole(response.getRole());
-            user.setName(response.getName());
-            session.setAttribute("user", user);
-
-            return ResponseEntity.ok(response);
+            User user = authService.registerUser(registrationDto);
+            return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@Valid @RequestBody UserLoginRequest loginDto, HttpSession session) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody UserLoginRequest loginDto) {
         try {
-            AuthResponse response = authService.loginUser(loginDto);
-            User user = new User();
-            user.setId(response.getId());
-            user.setEmail(response.getEmail());
-            user.setRole(response.getRole());
-            user.setName(response.getName());
-            session.setAttribute("user", user);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(401).body(e.getMessage());
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            String jwt = jwtUtil.generateJwtToken(authentication);
+
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+
+            return ResponseEntity.ok(AuthResponse.builder()
+                    .token(jwt)
+                    .refreshToken(refreshToken.getToken())
+                    .name(userDetails.getUsername())
+                    .email(userDetails.getEmail())
+                    .role(userDetails.getRole())
+                    .id(userDetails.getId())
+                    .build());
+        } catch (Exception e) {
+            log.error("Authentication failed: {}", e.getMessage());
+            return ResponseEntity.status(401).body("Invalid email or password");
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshtoken(@Valid @RequestBody TokenRefreshRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+
+        java.util.Optional<RefreshToken> tokenOpt = refreshTokenService.findByToken(requestRefreshToken);
+
+        if (tokenOpt.isPresent()) {
+            RefreshToken token = refreshTokenService.verifyExpiration(tokenOpt.get());
+            User user = token.getUser();
+            String jwt = jwtUtil.generateTokenFromEmail(user.getEmail());
+            return ResponseEntity.ok(AuthResponse.builder()
+                    .token(jwt)
+                    .refreshToken(requestRefreshToken)
+                    .name(user.getName())
+                    .email(user.getEmail())
+                    .role(user.getRole())
+                    .id(user.getId())
+                    .build());
+        } else {
+            return ResponseEntity.status(403).body("Refresh token is not in database!");
         }
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
-        session.invalidate();
-        return ResponseEntity.ok("Logged out successfully");
+    public ResponseEntity<?> logoutUser() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetailsImpl) {
+            Long userId = ((UserDetailsImpl) principal).getId();
+            refreshTokenService.deleteByUserId(userId);
+        }
+        return ResponseEntity.ok("Log out successful");
     }
 }
