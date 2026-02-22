@@ -1,7 +1,7 @@
-package com.revhire.repository;
+package com.example.revhirehiringplatform.repository;
 
-import com.revhire.model.RefreshToken;
-import com.revhire.model.User;
+import com.example.revhirehiringplatform.model.RefreshToken;
+import com.example.revhirehiringplatform.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;

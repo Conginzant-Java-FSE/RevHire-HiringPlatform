@@ -1,11 +1,11 @@
-package com.revhire.controller;
+package com.example.revhirehiringplatform.controller;
 
-import com.revhire.dto.request.JobPostRequest;
-import com.revhire.dto.response.JobPostResponse;
-import com.revhire.model.User;
-import com.revhire.model.JobPost;
-import com.revhire.security.UserDetailsImpl;
-import com.revhire.repository.UserRepository;
+import com.example.revhirehiringplatform.dto.request.JobPostRequest;
+import com.example.revhirehiringplatform.dto.response.JobPostResponse;
+import com.example.revhirehiringplatform.model.User;
+import com.example.revhirehiringplatform.model.JobPost;
+import com.example.revhirehiringplatform.security.UserDetailsImpl;
+import com.example.revhirehiringplatform.repository.UserRepository;
 import com.revhire.service.JobService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -94,7 +94,7 @@ public class JobController {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can edit jobs");
         }
         try {
-            // Note: Service logic should verify the employer owns the job
+
             JobPostResponse updatedJob = jobService.updateJob(id, jobDto, user);
             return ResponseEntity.ok(updatedJob);
         } catch (RuntimeException e) {
@@ -110,7 +110,7 @@ public class JobController {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can update job status");
         }
         try {
-            // Note: Service logic should verify the employer owns the job
+
             JobPostResponse updatedJob = jobService.updateJobStatus(id, status, user);
             return ResponseEntity.ok(updatedJob);
         } catch (RuntimeException e) {

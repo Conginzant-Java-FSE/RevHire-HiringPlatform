@@ -1,4 +1,4 @@
-package com.revhire.dto.response;
+package com.example.revhirehiringplatform.dto.response;
 
 import lombok.Data;
 import java.time.LocalDateTime;
