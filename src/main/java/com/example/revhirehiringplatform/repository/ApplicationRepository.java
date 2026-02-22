@@ -11,4 +11,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Application> findByJobPostId(Long jobId);
 
     List<Application> findByJobSeekerId(Long seekerId);
+
+    List<Application> findByJobPostCreatedBy(com.example.revhirehiringplatform.model.User user);
 }

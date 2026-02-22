@@ -14,6 +14,9 @@ public class ApplicationResponse {
     private String jobSeekerName;
     private String jobSeekerEmail;
     private String jobSeekerSkills;
+    private String jobSeekerExperience;
+    private String jobSeekerEducation;
     private ApplicationStatus status;
+    private String withdrawReason;
     private LocalDateTime appliedAt;
 }

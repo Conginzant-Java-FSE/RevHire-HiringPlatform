@@ -1,6 +1,6 @@
-package com.revhire.dto.request;
+package com.example.revhirehiringplatform.dto.request;
 
-import com.revhire.model.Application.ApplicationStatus;
+import com.example.revhirehiringplatform.model.Application.ApplicationStatus;
 import lombok.Data;
 import java.util.List;
 

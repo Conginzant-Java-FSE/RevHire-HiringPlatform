@@ -1,6 +1,5 @@
 package com.example.revhirehiringplatform.repository;
 
-
 import com.example.revhirehiringplatform.model.Company;
 import com.example.revhirehiringplatform.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +12,3 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     List<Company> findByCreatedByOrderByNameAsc(User user);
 }
-
