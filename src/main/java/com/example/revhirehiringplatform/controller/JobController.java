@@ -6,7 +6,7 @@ import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.model.JobPost;
 import com.example.revhirehiringplatform.security.UserDetailsImpl;
 import com.example.revhirehiringplatform.repository.UserRepository;
-import com.revhire.service.JobService;
+import com.example.revhirehiringplatform.service.JobService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import java.util.Optional;
 public class JobController {
 
     private final JobService jobService;
-    private final com.revhire.service.JobSearchService searchService;
+    private final com.example.revhirehiringplatform.service.JobSearchService searchService;
     private final UserRepository userRepository;
 
     private User getUserFromContext(UserDetailsImpl userDetails) {
