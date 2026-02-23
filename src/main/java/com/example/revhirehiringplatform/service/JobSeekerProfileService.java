@@ -39,12 +39,10 @@ public class JobSeekerProfileService {
             profile.setUser(user);
         }
 
-
         if (profileDto.getPhone() != null) {
             user.setPhone(profileDto.getPhone());
             userRepository.save(user);
         }
-
 
         profile.setHeadline(profileDto.getHeadline());
         profile.setSummary(profileDto.getSummary());
@@ -52,7 +50,6 @@ public class JobSeekerProfileService {
         profile.setEmploymentStatus(profileDto.getEmploymentStatus());
 
         JobSeekerProfile savedProfile = profileRepository.save(profile);
-
 
         if (resumeFile != null && !resumeFile.isEmpty()) {
             resumeService.storeFile(resumeFile, savedProfile);
@@ -78,7 +75,6 @@ public class JobSeekerProfileService {
 
         resumeText.setCertificationsText(textDto.getCertifications());
 
-
         if (textDto.getSkills() != null && !textDto.getSkills().trim().isEmpty()) {
 
             List<String> skillNames = Arrays.stream(textDto.getSkills().split(","))
@@ -86,19 +82,17 @@ public class JobSeekerProfileService {
                     .filter(s -> !s.isEmpty())
                     .toList();
 
-
             List<SeekerSkillMap> existingMaps = seekerSkillMapRepository.findByJobSeekerId(profile.getId());
             seekerSkillMapRepository.deleteAll(existingMaps);
 
             for (String skillName : skillNames) {
 
-                SkillsMaster skillMaster = skillsMasterRepository.findByNameIgnoreCase(skillName)
+                SkillsMaster skillMaster = skillsMasterRepository.findBySkillNameIgnoreCase(skillName)
                         .orElseGet(() -> {
                             SkillsMaster master = new SkillsMaster();
                             master.setSkillName(skillName);
                             return skillsMasterRepository.save(master);
                         });
-
 
                 SeekerSkillMap skillMap = new SeekerSkillMap();
                 skillMap.setJobSeeker(profile);
