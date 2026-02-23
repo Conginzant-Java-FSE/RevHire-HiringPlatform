@@ -76,7 +76,7 @@ public class JobService {
                     .filter(s -> !s.isEmpty())
                     .toList();
             for (String skillName : skillNames) {
-                SkillsMaster skillMaster = skillsMasterRepository.findByNameIgnoreCase(skillName)
+                SkillsMaster skillMaster = skillsMasterRepository.findBySkillNameIgnoreCase(skillName)
                         .orElseGet(() -> {
                             SkillsMaster master = new SkillsMaster();
                             master.setSkillName(skillName);
@@ -176,7 +176,7 @@ public class JobService {
             jobSkillMapRepository.deleteAll(existingMaps);
 
             for (String skillName : skillNames) {
-                SkillsMaster skillMaster = skillsMasterRepository.findByNameIgnoreCase(skillName)
+                SkillsMaster skillMaster = skillsMasterRepository.findBySkillNameIgnoreCase(skillName)
                         .orElseGet(() -> {
                             SkillsMaster master = new SkillsMaster();
                             master.setSkillName(skillName);
