@@ -1,14 +1,14 @@
-package com.revhire.service;
+package com.example.revhirehiringplatform.service;
 
-import com.revhire.dto.request.JobSeekerProfileRequest;
-import com.revhire.dto.request.ResumeTextRequest;
-import com.revhire.model.JobSeekerProfile;
-import com.revhire.model.ResumeText;
-import com.revhire.model.SeekerSkillMap;
-import com.revhire.model.SkillsMaster;
-import com.revhire.model.User;
-import com.revhire.repository.JobSeekerProfileRepository;
-import com.revhire.repository.ResumeTextRepository;
+import com.example.revhirehiringplatform.dto.request.JobSeekerProfileRequest;
+import com.example.revhirehiringplatform.dto.request.ResumeTextRequest;
+import com.example.revhirehiringplatform.model.JobSeekerProfile;
+import com.example.revhirehiringplatform.model.ResumeText;
+import com.example.revhirehiringplatform.model.SeekerSkillMap;
+import com.example.revhirehiringplatform.model.SkillsMaster;
+import com.example.revhirehiringplatform.model.User;
+import com.example.revhirehiringplatform.repository.JobSeekerProfileRepository;
+import com.example.revhirehiringplatform.repository.ResumeTextRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,9 +26,9 @@ public class JobSeekerProfileService {
     private final JobSeekerProfileRepository profileRepository;
     private final ResumeTextRepository resumeTextRepository;
     private final JobSeekerResumeService resumeService;
-    private final com.revhire.repository.UserRepository userRepository;
-    private final com.revhire.repository.SkillsMasterRepository skillsMasterRepository;
-    private final com.revhire.repository.SeekerSkillMapRepository seekerSkillMapRepository;
+    private final com.example.revhirehiringplatform.repository.UserRepository userRepository;
+    private final com.example.revhirehiringplatform.repository.SkillsMasterRepository skillsMasterRepository;
+    private final com.example.revhirehiringplatform.repository.SeekerSkillMapRepository seekerSkillMapRepository;
 
     @Transactional
     public JobSeekerProfile updateProfile(JobSeekerProfileRequest profileDto, MultipartFile resumeFile, User user) {

@@ -1,8 +1,8 @@
-package com.revhire.service;
+package com.example.revhirehiringplatform.service;
 
-import com.revhire.model.AuditLog;
-import com.revhire.model.User;
-import com.revhire.repository.AuditLogRepository;
+import com.example.revhirehiringplatform.model.AuditLog;
+import com.example.revhirehiringplatform.model.User;
+import com.example.revhirehiringplatform.repository.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

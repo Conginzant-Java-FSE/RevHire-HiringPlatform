@@ -1,8 +1,8 @@
-package com.revhire.service;
+package com.example.revhirehiringplatform.service;
 
-import com.revhire.dto.response.JobPostResponse;
-import com.revhire.model.JobPost;
-import com.revhire.repository.JobPostRepository;
+import com.example.revhirehiringplatform.dto.response.JobPostResponse;
+import com.example.revhirehiringplatform.model.JobPost;
+import com.example.revhirehiringplatform.repository.JobPostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,8 +1,8 @@
-package com.revhire.service;
+package com.example.revhirehiringplatform.service;
 
-import com.revhire.dto.request.UserRegistrationRequest;
-import com.revhire.model.User;
-import com.revhire.repository.UserRepository;
+import com.example.revhirehiringplatform.dto.request.UserRegistrationRequest;
+import com.example.revhirehiringplatform.model.User;
+import com.example.revhirehiringplatform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final com.revhire.repository.JobSeekerProfileRepository jobSeekerProfileRepository;
+    private final com.example.revhirehiringplatform.repository.JobSeekerProfileRepository jobSeekerProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
 
@@ -36,7 +36,7 @@ public class AuthService {
 
         // If Job Seeker, create initial profile
         if (savedUser.getRole() == User.Role.JOB_SEEKER) {
-            com.revhire.model.JobSeekerProfile profile = new com.revhire.model.JobSeekerProfile();
+            com.example.revhirehiringplatform.model.JobSeekerProfile profile = new com.example.revhirehiringplatform.model.JobSeekerProfile();
             profile.setUser(savedUser);
             profile.setLocation(registrationDto.getLocation());
             profile.setEmploymentStatus(registrationDto.getEmploymentStatus());
