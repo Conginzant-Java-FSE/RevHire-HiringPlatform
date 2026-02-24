@@ -1,12 +1,12 @@
-package com.example.revhirehiringplatform.service;
+package com.revhire.service;
 
-import com.example.revhirehiringplatform.dto.request.CompanyRequest;
-import com.example.revhirehiringplatform.dto.response.CompanyResponse;
-import com.example.revhirehiringplatform.model.Company;
-import com.example.revhirehiringplatform.model.EmployerProfile;
-import com.example.revhirehiringplatform.model.User;
-import com.example.revhirehiringplatform.repository.CompanyRepository;
-import com.example.revhirehiringplatform.repository.EmployerProfileRepository;
+import com.revhire.dto.request.CompanyRequest;
+import com.revhire.dto.response.CompanyResponse;
+import com.revhire.model.Company;
+import com.revhire.model.EmployerProfile;
+import com.revhire.model.User;
+import com.revhire.repository.CompanyRepository;
+import com.revhire.repository.EmployerProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,12 +31,12 @@ public class CompanyService {
             company = companyRepository.findById(companyDto.getId())
                     .orElseThrow(() -> new RuntimeException("Company not found"));
 
-
+            // Security check: only creator can update
             if (company.getCreatedBy() != null && !company.getCreatedBy().getId().equals(user.getId())) {
                 throw new RuntimeException("Unauthorized to update this company");
             }
         } else {
-
+            // Check if user already has a company
             java.util.List<Company> existingCompanies = companyRepository.findByCreatedByOrderByNameAsc(user);
             if (!existingCompanies.isEmpty()) {
                 throw new RuntimeException("You can only have one company profile");
@@ -50,11 +50,11 @@ public class CompanyService {
         company.setWebsite(companyDto.getWebsite());
         company.setLocation(companyDto.getLocation());
         company.setIndustry(companyDto.getIndustry());
-        company.setSize("");
+        company.setSize(""); // Default or add to DTO
 
         company = companyRepository.save(company);
 
-
+        // Maintain EmployerProfile for backward compatibility or primary company link
         Optional<EmployerProfile> profileOpt = employerProfileRepository.findByUserId(user.getId());
         if (profileOpt.isEmpty()) {
             EmployerProfile newProfile = new EmployerProfile();
@@ -74,7 +74,7 @@ public class CompanyService {
     public CompanyResponse getCompanyProfile(User user) {
         Company company = employerProfileRepository.findByUserId(user.getId())
                 .map(EmployerProfile::getCompany)
-                .orElse(null);
+                .orElse(null); // Return null instead of throw to allow UI to handle no company state
         return company != null ? mapToDto(company) : null;
     }
 

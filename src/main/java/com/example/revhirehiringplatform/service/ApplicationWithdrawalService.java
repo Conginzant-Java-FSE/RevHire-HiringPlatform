@@ -1,11 +1,11 @@
-package com.example.revhirehiringplatform.service;
+package com.revhire.service;
 
-import com.example.revhirehiringplatform.dto.response.ApplicationResponse;
-import com.example.revhirehiringplatform.model.Application;
-import com.example.revhirehiringplatform.model.User;
-import com.example.revhirehiringplatform.model.ApplicationStatusHistory;
-import com.example.revhirehiringplatform.repository.ApplicationRepository;
-import com.example.revhirehiringplatform.repository.ApplicationStatusHistoryRepository;
+import com.revhire.dto.response.ApplicationResponse;
+import com.revhire.model.Application;
+import com.revhire.model.User;
+import com.revhire.model.ApplicationStatusHistory;
+import com.revhire.repository.ApplicationRepository;
+import com.revhire.repository.ApplicationStatusHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,7 +53,7 @@ public class ApplicationWithdrawalService {
         dto.setJobSeekerId(app.getJobSeeker().getId());
         dto.setJobSeekerName(app.getJobSeeker().getUser().getName());
         dto.setJobSeekerEmail(app.getJobSeeker().getUser().getEmail());
-        dto.setJobSeekerSkills(app.getJobSeeker().getSummary());
+        dto.setJobSeekerSkills(app.getJobSeeker().getSummary()); // Using summary as placeholder for skills
         dto.setStatus(app.getStatus());
         dto.setAppliedAt(app.getAppliedAt());
         return dto;

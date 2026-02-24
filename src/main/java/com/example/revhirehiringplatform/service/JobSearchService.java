@@ -1,8 +1,8 @@
-package com.example.revhirehiringplatform.service;
+package com.revhire.service;
 
-import com.example.revhirehiringplatform.dto.response.JobPostResponse;
-import com.example.revhirehiringplatform.model.JobPost;
-import com.example.revhirehiringplatform.repository.JobPostRepository;
+import com.revhire.dto.response.JobPostResponse;
+import com.revhire.model.JobPost;
+import com.revhire.repository.JobPostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,8 +21,8 @@ public class JobSearchService {
 
     @Transactional(readOnly = true)
     public List<JobPostResponse> searchJobs(String title, String location, Integer experience, String company,
-                                            Double salary,
-                                            String jobType, Integer daysAgo) {
+            Double salary,
+            String jobType, Integer daysAgo) {
         java.time.LocalDateTime startDate = null;
         if (daysAgo != null) {
             startDate = java.time.LocalDateTime.now().minusDays(daysAgo);
