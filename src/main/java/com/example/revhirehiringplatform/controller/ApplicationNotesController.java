@@ -33,7 +33,7 @@ public class ApplicationNotesController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getNotesForApplication(@PathVariable Long applicationId,
+    public ResponseEntity<?> getNotesForApplication(@PathVariable("applicationId") Long applicationId,
                                                     @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
