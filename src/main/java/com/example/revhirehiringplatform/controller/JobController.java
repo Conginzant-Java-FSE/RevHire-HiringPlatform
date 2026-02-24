@@ -36,7 +36,7 @@ public class JobController {
 
     @PostMapping
     public ResponseEntity<?> createJob(@Valid @RequestBody JobPostRequest jobDto,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                       @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can post jobs");
@@ -51,20 +51,20 @@ public class JobController {
 
     @GetMapping
     public ResponseEntity<List<JobPostResponse>> getAllJobs(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) Integer experience,
-            @RequestParam(required = false) String company,
-            @RequestParam(required = false) Double salary,
-            @RequestParam(required = false) String jobType,
-            @RequestParam(required = false) Integer daysAgo) {
+            @RequestParam(required = false, name = "title") String title,
+            @RequestParam(required = false, name = "location") String location,
+            @RequestParam(required = false, name = "experience") Integer experience,
+            @RequestParam(required = false, name = "company") String company,
+            @RequestParam(required = false, name = "salary") Double salary,
+            @RequestParam(required = false, name = "jobType") String jobType,
+            @RequestParam(required = false, name = "daysAgo") Integer daysAgo) {
 
         return ResponseEntity
                 .ok(searchService.searchJobs(title, location, experience, company, salary, jobType, daysAgo));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<JobPostResponse> getJobById(@PathVariable Long id) {
+    public ResponseEntity<JobPostResponse> getJobById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(jobService.mapToDto(jobService.getJobById(id)));
     }
 
@@ -87,14 +87,14 @@ public class JobController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateJob(@PathVariable Long id, @Valid @RequestBody JobPostRequest jobDto,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<?> updateJob(@PathVariable("id") Long id, @Valid @RequestBody JobPostRequest jobDto,
+                                       @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can edit jobs");
         }
         try {
-
+            // Note: Service logic should verify the employer owns the job
             JobPostResponse updatedJob = jobService.updateJob(id, jobDto, user);
             return ResponseEntity.ok(updatedJob);
         } catch (RuntimeException e) {
@@ -103,14 +103,15 @@ public class JobController {
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<?> updateJobStatus(@PathVariable Long id, @RequestParam JobPost.JobStatus status,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<?> updateJobStatus(@PathVariable("id") Long id,
+                                             @RequestParam("status") JobPost.JobStatus status,
+                                             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can update job status");
         }
         try {
-
+            // Note: Service logic should verify the employer owns the job
             JobPostResponse updatedJob = jobService.updateJobStatus(id, status, user);
             return ResponseEntity.ok(updatedJob);
         } catch (RuntimeException e) {
@@ -119,7 +120,8 @@ public class JobController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteJob(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<?> deleteJob(@PathVariable("id") Long id,
+                                       @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can delete jobs");
@@ -132,3 +134,4 @@ public class JobController {
         }
     }
 }
+
