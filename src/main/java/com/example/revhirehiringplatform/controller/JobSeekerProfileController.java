@@ -139,8 +139,8 @@ public class JobSeekerProfileController {
     }
 
     @GetMapping("/{seekerId}")
-    public ResponseEntity<?> getProfileById(@PathVariable Long seekerId,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<?> getProfileById(@PathVariable("seekerId") Long seekerId,
+                                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can view full profiles.");
@@ -163,9 +163,9 @@ public class JobSeekerProfileController {
         }
     }
 
-    @GetMapping("/{seekerId}/resume")
-    public ResponseEntity<?> downloadResume(@PathVariable Long seekerId,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    @GetMapping("/{seekerId}/resume/download")
+    public ResponseEntity<?> downloadResume(@PathVariable("seekerId") Long seekerId,
+                                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can download resumes.");

@@ -53,7 +53,8 @@ public class NotificationController {
     }
 
     @PutMapping("/{id}/read")
-    public ResponseEntity<?> markAsRead(@PathVariable Long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<?> markAsRead(@PathVariable("id") Long id,
+                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null) {
             return ResponseEntity.status(401).body("Unauthorized");
@@ -76,4 +77,3 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
 }
-

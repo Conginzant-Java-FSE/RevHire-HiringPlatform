@@ -31,7 +31,7 @@ public class SavedResumeController {
     }
 
     @PostMapping("/{seekerId}")
-    public ResponseEntity<?> saveResume(@PathVariable Long seekerId,
+    public ResponseEntity<?> saveResume(@PathVariable("seekerId") Long seekerId,
                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
@@ -46,7 +46,7 @@ public class SavedResumeController {
     }
 
     @DeleteMapping("/{seekerId}")
-    public ResponseEntity<?> unsaveResume(@PathVariable Long seekerId,
+    public ResponseEntity<?> unsaveResume(@PathVariable("seekerId") Long seekerId,
                                           @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {

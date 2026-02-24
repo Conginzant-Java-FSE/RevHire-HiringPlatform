@@ -31,7 +31,8 @@ public class SavedJobsController {
     }
 
     @PostMapping("/{jobId}")
-    public ResponseEntity<?> saveJob(@PathVariable Long jobId, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<?> saveJob(@PathVariable("jobId") Long jobId,
+                                     @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -45,7 +46,8 @@ public class SavedJobsController {
     }
 
     @DeleteMapping("/{jobId}")
-    public ResponseEntity<?> unsaveJob(@PathVariable Long jobId, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<?> unsaveJob(@PathVariable("jobId") Long jobId,
+                                       @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
             return ResponseEntity.status(403).body("Unauthorized");
