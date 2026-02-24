@@ -1,5 +1,7 @@
 package com.example.revhirehiringplatform.security;
 
+
+
 import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
