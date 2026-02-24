@@ -79,7 +79,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getProfileById(@PathVariable Long id) {
+    public ResponseEntity<?> getProfileById(@PathVariable("id") Long id) {
         try {
             CompanyResponse company = companyService.getCompanyById(id);
             return ResponseEntity.ok(company);

@@ -58,6 +58,7 @@ public class AuthController {
                     .refreshToken(refreshToken.getToken())
                     .name(userDetails.getUsername())
                     .email(userDetails.getEmail())
+                    .phone(userDetails.getPhone())
                     .role(userDetails.getRole())
                     .id(userDetails.getId())
                     .build());
@@ -82,6 +83,7 @@ public class AuthController {
                     .refreshToken(requestRefreshToken)
                     .name(user.getName())
                     .email(user.getEmail())
+                    .phone(user.getPhone())
                     .role(user.getRole())
                     .id(user.getId())
                     .build());

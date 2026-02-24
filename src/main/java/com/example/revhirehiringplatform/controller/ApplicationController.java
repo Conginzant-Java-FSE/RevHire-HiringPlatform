@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -38,7 +37,7 @@ public class ApplicationController {
     }
 
     @PostMapping("/apply/{jobId}")
-    public ResponseEntity<?> applyForJob(@PathVariable Long jobId,
+    public ResponseEntity<?> applyForJob(@PathVariable("jobId") Long jobId,
                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
@@ -67,7 +66,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/job/{jobId}")
-    public ResponseEntity<?> getApplicationsForJob(@PathVariable Long jobId,
+    public ResponseEntity<?> getApplicationsForJob(@PathVariable("jobId") Long jobId,
                                                    @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
@@ -82,8 +81,9 @@ public class ApplicationController {
     }
 
     @PutMapping("/{applicationId}/status")
-    public ResponseEntity<?> updateStatus(@PathVariable Long applicationId,
-                                          @RequestParam Application.ApplicationStatus status, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<?> updateStatus(@PathVariable("applicationId") Long applicationId,
+                                          @RequestParam("status") Application.ApplicationStatus status,
+                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -97,8 +97,9 @@ public class ApplicationController {
     }
 
     @PutMapping("/{applicationId}/withdraw")
-    public ResponseEntity<?> withdrawApplication(@PathVariable Long applicationId,
-                                                 @RequestParam(required = false) String reason, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<?> withdrawApplication(@PathVariable("applicationId") Long applicationId,
+                                                 @RequestParam(required = false, name = "reason") String reason,
+                                                 @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -112,7 +113,7 @@ public class ApplicationController {
     }
 
     @PostMapping("/{applicationId}/notes")
-    public ResponseEntity<?> addNoteToApplication(@PathVariable Long applicationId,
+    public ResponseEntity<?> addNoteToApplication(@PathVariable("applicationId") Long applicationId,
                                                   @RequestBody ApplicationNoteRequest note, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
@@ -151,13 +152,13 @@ public class ApplicationController {
     }
 
     @GetMapping("/job/{jobId}/search")
-    public ResponseEntity<?> searchApplicantsForJob(@PathVariable Long jobId,
-                                                    @RequestParam(required = false) String name,
-                                                    @RequestParam(required = false) String skill,
-                                                    @RequestParam(required = false) String experience,
-                                                    @RequestParam(required = false) String education,
-                                                    @RequestParam(required = false) String appliedAfter,
-                                                    @RequestParam(required = false) Application.ApplicationStatus status,
+    public ResponseEntity<?> searchApplicantsForJob(@PathVariable("jobId") Long jobId,
+                                                    @RequestParam(required = false, name = "name") String name,
+                                                    @RequestParam(required = false, name = "skill") String skill,
+                                                    @RequestParam(required = false, name = "experience") String experience,
+                                                    @RequestParam(required = false, name = "education") String education,
+                                                    @RequestParam(required = false, name = "appliedAfter") String appliedAfter,
+                                                    @RequestParam(required = false, name = "status") Application.ApplicationStatus status,
                                                     @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
