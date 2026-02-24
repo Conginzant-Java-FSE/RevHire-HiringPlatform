@@ -10,5 +10,5 @@ import java.util.List;
 public interface ApplicationNotesRepository extends JpaRepository<ApplicationNotes, Long> {
     List<ApplicationNotes> findByApplicationId(Long applicationId);
 
-    List<ApplicationNotes> findByCreatedById(Long authorId);
+    List<ApplicationNotes> findByCreatedBy_Id(Long authorId);
 }

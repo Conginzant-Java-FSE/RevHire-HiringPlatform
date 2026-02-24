@@ -38,6 +38,7 @@ public class SavedResumeService {
         savedResume.setJobSeeker(profile);
         savedResumeRepository.save(savedResume);
 
+        // Optionally notify the job seeker that their profile was viewed/saved
         notificationService.createNotification(
                 profile.getUser(),
                 "An employer has favorited your profile!");
@@ -75,6 +76,10 @@ public class SavedResumeService {
                         dto.setPhone(profile.getUser().getPhone());
                     }
 
+                    // For employer convenience, fetch resume text as part of the saved talent pool
+                    // listing
+                    // Real applications might use a specific SavedResumeDto to avoid polluting
+                    // JobSeekerProfileDto
                     return dto;
                 })
                 .toList();
