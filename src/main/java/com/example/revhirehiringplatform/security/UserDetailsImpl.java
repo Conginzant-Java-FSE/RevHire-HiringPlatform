@@ -1,5 +1,6 @@
 package com.example.revhirehiringplatform.security;
 
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.example.revhirehiringplatform.model.User;
 import lombok.Getter;
@@ -28,7 +29,7 @@ public class UserDetailsImpl implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(Long id, String username, String email, String phone, String password, User.Role role,
-            Collection<? extends GrantedAuthority> authorities) {
+                           Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -43,7 +44,7 @@ public class UserDetailsImpl implements UserDetails {
 
         return new UserDetailsImpl(
                 user.getId(),
-                user.getEmail(), // Using email as username
+                user.getEmail(),
                 user.getEmail(),
                 user.getPhone(),
                 user.getPassword(),
