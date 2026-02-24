@@ -1,7 +1,5 @@
 package com.example.revhirehiringplatform.service;
 
-
-
 import com.example.revhirehiringplatform.model.Notification;
 import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.repository.NotificationRepository;
@@ -58,4 +56,3 @@ public class NotificationService {
         notificationRepository.saveAll(unread);
     }
 }
-
