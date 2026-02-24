@@ -1,7 +1,5 @@
 package com.example.revhirehiringplatform.service;
 
-
-
 import com.example.revhirehiringplatform.model.Application;
 import com.example.revhirehiringplatform.model.ApplicationNotes;
 import com.example.revhirehiringplatform.model.User;
@@ -22,7 +20,7 @@ public class ApplicationUpdateService {
 
     @Transactional
     public com.example.revhirehiringplatform.dto.response.ApplicationNoteResponse addNoteToApplication(Long applicationId, String noteText,
-                                                                                 User employer) {
+            User employer) {
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 
@@ -49,4 +47,3 @@ public class ApplicationUpdateService {
         return dto;
     }
 }
-

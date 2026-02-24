@@ -34,7 +34,7 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-
+        // If Job Seeker, create initial profile
         if (savedUser.getRole() == User.Role.JOB_SEEKER) {
             com.example.revhirehiringplatform.model.JobSeekerProfile profile = new com.example.revhirehiringplatform.model.JobSeekerProfile();
             profile.setUser(savedUser);
@@ -43,7 +43,7 @@ public class AuthService {
             jobSeekerProfileRepository.save(profile);
         }
 
-
+        // Audit logging
         auditLogService.logAction(
                 "User",
                 savedUser.getId(),

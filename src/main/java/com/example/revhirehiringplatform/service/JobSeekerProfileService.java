@@ -25,7 +25,7 @@ public class JobSeekerProfileService {
 
     private final JobSeekerProfileRepository profileRepository;
     private final ResumeTextRepository resumeTextRepository;
-    private final com.example.revhirehiringplatform.service.JobSeekerResumeService resumeService;
+    private final JobSeekerResumeService resumeService;
     private final com.example.revhirehiringplatform.repository.UserRepository userRepository;
     private final com.example.revhirehiringplatform.repository.SkillsMasterRepository skillsMasterRepository;
     private final com.example.revhirehiringplatform.repository.SeekerSkillMapRepository seekerSkillMapRepository;
@@ -39,11 +39,13 @@ public class JobSeekerProfileService {
             profile.setUser(user);
         }
 
+        // Update User explicitly if phone is provided
         if (profileDto.getPhone() != null) {
             user.setPhone(profileDto.getPhone());
             userRepository.save(user);
         }
 
+        // Update basic profile
         profile.setHeadline(profileDto.getHeadline());
         profile.setSummary(profileDto.getSummary());
         profile.setLocation(profileDto.getLocation());
@@ -51,6 +53,7 @@ public class JobSeekerProfileService {
 
         JobSeekerProfile savedProfile = profileRepository.save(profile);
 
+        // Handle Resume File
         if (resumeFile != null && !resumeFile.isEmpty()) {
             resumeService.storeFile(resumeFile, savedProfile);
         }
@@ -75,18 +78,20 @@ public class JobSeekerProfileService {
 
         resumeText.setCertificationsText(textDto.getCertifications());
 
+        // Process Skills for Relational Mapping
         if (textDto.getSkills() != null && !textDto.getSkills().trim().isEmpty()) {
-
+            // Basic parsing: split by comma
             List<String> skillNames = Arrays.stream(textDto.getSkills().split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .toList();
 
+            // Clear old mappings to prevent duplicates (simplest update strategy)
             List<SeekerSkillMap> existingMaps = seekerSkillMapRepository.findByJobSeekerId(profile.getId());
             seekerSkillMapRepository.deleteAll(existingMaps);
 
             for (String skillName : skillNames) {
-
+                // Find or create in SkillsMaster
                 SkillsMaster skillMaster = skillsMasterRepository.findBySkillNameIgnoreCase(skillName)
                         .orElseGet(() -> {
                             SkillsMaster master = new SkillsMaster();
@@ -94,6 +99,7 @@ public class JobSeekerProfileService {
                             return skillsMasterRepository.save(master);
                         });
 
+                // Create Mapping
                 SeekerSkillMap skillMap = new SeekerSkillMap();
                 skillMap.setJobSeeker(profile);
                 skillMap.setSkill(skillMaster);

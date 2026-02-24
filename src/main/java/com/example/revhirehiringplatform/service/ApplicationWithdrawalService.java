@@ -53,7 +53,7 @@ public class ApplicationWithdrawalService {
         dto.setJobSeekerId(app.getJobSeeker().getId());
         dto.setJobSeekerName(app.getJobSeeker().getUser().getName());
         dto.setJobSeekerEmail(app.getJobSeeker().getUser().getEmail());
-        dto.setJobSeekerSkills(app.getJobSeeker().getSummary());
+        dto.setJobSeekerSkills(app.getJobSeeker().getSummary()); // Using summary as placeholder for skills
         dto.setStatus(app.getStatus());
         dto.setAppliedAt(app.getAppliedAt());
         return dto;

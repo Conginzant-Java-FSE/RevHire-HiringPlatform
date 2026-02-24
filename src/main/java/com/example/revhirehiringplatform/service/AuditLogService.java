@@ -16,10 +16,16 @@ public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
 
-
+    /**
+     * Creates an audit log entry for any entity change.
+     * Uses Propagation.REQUIRES_NEW to ensure the log is saved even if the parent
+     * transaction fails,
+     * or it can be attached to the existing transaction depending on architectural
+     * needs.
+     */
     @Transactional(propagation = Propagation.REQUIRED)
     public void logAction(String entityType, Long entityId, String action, String oldValue, String newValue,
-                          User changedBy) {
+            User changedBy) {
         try {
             AuditLog auditLog = new AuditLog();
             auditLog.setEntityType(entityType);
@@ -32,7 +38,8 @@ public class AuditLogService {
             auditLogRepository.save(auditLog);
             log.debug("Audit log created: {} on {} ID: {}", action, entityType, entityId);
         } catch (Exception e) {
-
+            // We usually don't want audit logging failures to roll back the main
+            // transaction
             log.error("Failed to create audit log: {}", e.getMessage(), e);
         }
     }
