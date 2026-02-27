@@ -44,7 +44,7 @@ public class UserDetailsImpl implements UserDetails {
 
         return new UserDetailsImpl(
                 user.getId(),
-                user.getEmail(),
+                user.getEmail(), // Using email as username
                 user.getEmail(),
                 user.getPhone(),
                 user.getPassword(),
@@ -64,7 +64,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getUsername() {
-        return username;
+        return username; // Email is used as the username
     }
 
     @Override

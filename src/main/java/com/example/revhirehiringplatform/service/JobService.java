@@ -1,7 +1,9 @@
 package com.example.revhirehiringplatform.service;
 
 import com.example.revhirehiringplatform.dto.request.JobPostRequest;
+import com.example.revhirehiringplatform.dto.response.ApplicationResponse;
 import com.example.revhirehiringplatform.dto.response.JobPostResponse;
+import com.example.revhirehiringplatform.dto.response.SkillResponse;
 import com.example.revhirehiringplatform.model.Company;
 import com.example.revhirehiringplatform.model.EmployerProfile;
 import com.example.revhirehiringplatform.model.JobPost;
@@ -9,11 +11,7 @@ import com.example.revhirehiringplatform.model.JobSkillMap;
 import com.example.revhirehiringplatform.model.SkillsMaster;
 import com.example.revhirehiringplatform.model.User;
 
-import com.example.revhirehiringplatform.repository.CompanyRepository;
-import com.example.revhirehiringplatform.repository.EmployerProfileRepository;
-import com.example.revhirehiringplatform.repository.JobPostRepository;
-import com.example.revhirehiringplatform.repository.JobSkillMapRepository;
-import com.example.revhirehiringplatform.repository.SkillsMasterRepository;
+import com.example.revhirehiringplatform.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,30 +28,32 @@ import java.util.stream.Collectors;
 @Slf4j
 public class JobService {
 
+    private static final String JOB_NOT_FOUND = "Job not found";
+    private static final String JOB_POST_STR = "JobPost";
+
     private final JobPostRepository jobPostRepository;
     private final CompanyRepository companyRepository;
     private final EmployerProfileRepository employerProfileRepository;
     private final AuditLogService auditLogService;
     private final SkillsMasterRepository skillsMasterRepository;
     private final JobSkillMapRepository jobSkillMapRepository;
+    private final ApplicationRepository applicationRepository;
 
     @Transactional
     public JobPostResponse createJob(JobPostRequest jobPostDto, User user) {
         log.info("Creating job: {} for user: {}", jobPostDto.getTitle(), user.getEmail());
 
         if (jobPostDto.getCompanyId() == null) {
-            throw new RuntimeException("Company ID is required to post a job");
+            throw new IllegalArgumentException("Company ID is required to post a job");
         }
 
         Company company = companyRepository.findById(jobPostDto.getCompanyId())
-                .orElseThrow(() -> new RuntimeException("Company not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Company not found"));
 
-        // Security check: only creator of the company or assigned employer can post
         if (company.getCreatedBy() != null && !company.getCreatedBy().getId().equals(user.getId())) {
-            // Fallback check EmployerProfile if creator is null (legacy)
             Optional<EmployerProfile> profileOpt = employerProfileRepository.findByUserId(user.getId());
             if (profileOpt.isEmpty() || !profileOpt.get().getCompany().getId().equals(company.getId())) {
-                throw new RuntimeException("Unauthorized to post for this company");
+                throw new IllegalStateException("Unauthorized to post for this company");
             }
         }
 
@@ -65,6 +65,9 @@ public class JobService {
         jobPost.setSalaryMax(parseSalary(jobPostDto.getSalary(), false));
         jobPost.setJobType(jobPostDto.getJobType());
         jobPost.setDeadline(jobPostDto.getDeadline() != null ? jobPostDto.getDeadline() : LocalDate.now().plusDays(30));
+        jobPost.setExperienceYears(jobPostDto.getExperienceYears());
+        jobPost.setEducation(jobPostDto.getEducation());
+        jobPost.setOpenings(jobPostDto.getOpenings());
         jobPost.setCompany(company);
         jobPost.setCreatedBy(user);
         jobPost.setStatus(JobPost.JobStatus.ACTIVE);
@@ -85,13 +88,13 @@ public class JobService {
                 JobSkillMap skillMap = new JobSkillMap();
                 skillMap.setJobPost(savedJob);
                 skillMap.setSkill(skillMaster);
-                skillMap.setMandatory(true); // Default
+                skillMap.setMandatory(true);
                 jobSkillMapRepository.save(skillMap);
             }
         }
 
         auditLogService.logAction(
-                "JobPost",
+                JOB_POST_STR,
                 savedJob.getId(),
                 "JOB_CREATED",
                 null,
@@ -101,15 +104,17 @@ public class JobService {
         return mapToDto(savedJob);
     }
 
-    // Helper to parse legacy "salary" string to min/max
     private Double parseSalary(String salary, boolean isMin) {
         if (salary == null || salary.isEmpty())
             return 0.0;
         try {
             String[] parts = salary.split("-");
             if (parts.length > 0) {
-                String val = parts[isMin ? 0 : (parts.length > 1 ? 1 : 0)].replaceAll("[^0-9.]", "");
-                return val.isEmpty() ? 0.0 : Double.parseDouble(val);
+                String targetPart = parts[isMin ? 0 : 1].replaceAll("[^0-9.]", "");
+                if (targetPart.isEmpty()) {
+                    return 0.0;
+                }
+                return Double.parseDouble(targetPart);
             }
             return 0.0;
         } catch (NumberFormatException e) {
@@ -125,11 +130,10 @@ public class JobService {
 
     public JobPost getJobById(Long id) {
         return jobPostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Job not found"));
+                .orElseThrow(() -> new IllegalArgumentException(JOB_NOT_FOUND));
     }
 
     public List<JobPostResponse> getMyJobs(User user) {
-        // Return jobs created by this user
         return jobPostRepository.findByCreatedBy(user).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -137,7 +141,6 @@ public class JobService {
 
     public List<JobPostResponse> getRecommendedJobs(User user) {
         log.info("Getting recommendations for user: {}", user.getEmail());
-        // Simple recommendation: return top 10 active jobs
         return jobPostRepository.findAll().stream()
                 .filter(j -> j.getStatus() == JobPost.JobStatus.ACTIVE)
                 .limit(10)
@@ -147,10 +150,10 @@ public class JobService {
 
     public JobPostResponse updateJob(Long id, JobPostRequest jobDto, User user) {
         JobPost job = jobPostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Job not found"));
+                .orElseThrow(() -> new IllegalArgumentException(JOB_NOT_FOUND));
 
         if (!job.getCreatedBy().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized: You can only edit jobs you posted.");
+            throw new IllegalStateException("Unauthorized: You can only edit jobs you posted.");
         }
 
         job.setTitle(jobDto.getTitle());
@@ -163,6 +166,10 @@ public class JobService {
             job.setDeadline(jobDto.getDeadline());
         if (jobDto.getExperienceYears() != null)
             job.setExperienceYears(jobDto.getExperienceYears());
+        if (jobDto.getEducation() != null)
+            job.setEducation(jobDto.getEducation());
+        if (jobDto.getOpenings() != null)
+            job.setOpenings(jobDto.getOpenings());
 
         JobPost updatedJob = jobPostRepository.save(job);
 
@@ -191,7 +198,7 @@ public class JobService {
         }
 
         auditLogService.logAction(
-                "JobPost",
+                JOB_POST_STR,
                 updatedJob.getId(),
                 "JOB_UPDATED",
                 "Old Title: " + job.getTitle() + ", Old Type: " + job.getJobType(),
@@ -203,17 +210,17 @@ public class JobService {
 
     public JobPostResponse updateJobStatus(Long id, JobPost.JobStatus status, User user) {
         JobPost job = jobPostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Job not found"));
+                .orElseThrow(() -> new IllegalArgumentException(JOB_NOT_FOUND));
 
         if (!job.getCreatedBy().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized: You can only edit jobs you posted.");
+            throw new IllegalStateException("Unauthorized: You can only edit jobs you posted.");
         }
 
         job.setStatus(status);
         JobPost updatedJob = jobPostRepository.save(job);
 
         auditLogService.logAction(
-                "JobPost",
+                JOB_POST_STR,
                 updatedJob.getId(),
                 "JOB_STATUS_UPDATED",
                 "Old Status: " + job.getStatus(),
@@ -225,14 +232,14 @@ public class JobService {
 
     public void deleteJob(Long id, User user) {
         JobPost job = jobPostRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Job not found"));
+                .orElseThrow(() -> new IllegalArgumentException(JOB_NOT_FOUND));
 
         if (!job.getCreatedBy().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized: You can only delete jobs you posted.");
+            throw new IllegalStateException("Unauthorized: You can only delete jobs you posted.");
         }
 
         auditLogService.logAction(
-                "JobPost",
+                JOB_POST_STR,
                 job.getId(),
                 "JOB_DELETED",
                 "Title: " + job.getTitle(),
@@ -240,6 +247,43 @@ public class JobService {
                 user);
 
         jobPostRepository.delete(job);
+    }
+
+    public List<ApplicationResponse> getJobApplications(Long id, User user) {
+        JobPost job = jobPostRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(JOB_NOT_FOUND));
+
+        if (!job.getCreatedBy().getId().equals(user.getId())) {
+            throw new IllegalStateException("Unauthorized to view applications for this job");
+        }
+        return applicationRepository.findByJobPostId(id).stream()
+                .map(this::mapApplicationToDto)
+                .toList();
+    }
+
+    public List<SkillResponse> getJobSkills(Long id) {
+        return jobSkillMapRepository.findByJobPostId(id).stream()
+                .map(map -> {
+                    SkillResponse res = new SkillResponse();
+                    res.setId(map.getSkill().getId());
+                    res.setName(map.getSkill().getSkillName());
+                    return res;
+                })
+                .toList();
+    }
+
+    private ApplicationResponse mapApplicationToDto(com.example.revhirehiringplatform.model.Application app) {
+        ApplicationResponse dto = new ApplicationResponse();
+        dto.setId(app.getId());
+        dto.setJobId(app.getJobPost().getId());
+        dto.setJobTitle(app.getJobPost().getTitle());
+        dto.setCompanyName(app.getJobPost().getCompany().getName());
+        dto.setJobSeekerId(app.getJobSeeker().getId());
+        dto.setJobSeekerName(app.getJobSeeker().getUser().getName());
+        dto.setJobSeekerEmail(app.getJobSeeker().getUser().getEmail());
+        dto.setStatus(app.getStatus());
+        dto.setAppliedAt(app.getAppliedAt());
+        return dto;
     }
 
     public JobPostResponse mapToDto(JobPost jobPost) {
@@ -253,12 +297,17 @@ public class JobService {
             dto.setRequirements(
                     skills.stream().map(s -> s.getSkill().getSkillName()).collect(Collectors.joining(", ")));
         } else {
-            dto.setRequirements(jobPost.getDescription()); // Fallback
+            dto.setRequirements(jobPost.getDescription());
         }
 
         dto.setLocation(jobPost.getLocation());
         dto.setSalary(jobPost.getSalaryMin() + " - " + jobPost.getSalaryMax());
         dto.setJobType(jobPost.getJobType());
+        dto.setDeadline(jobPost.getDeadline());
+        dto.setExperienceYears(jobPost.getExperienceYears());
+        dto.setEducation(jobPost.getEducation());
+        dto.setOpenings(jobPost.getOpenings());
+        dto.setStatus(jobPost.getStatus() != null ? jobPost.getStatus().name() : null);
         dto.setPostedDate(jobPost.getCreatedAt() != null ? jobPost.getCreatedAt().toLocalDate() : LocalDate.now());
         dto.setCompanyId(jobPost.getCompany().getId());
         dto.setCompanyName(jobPost.getCompany().getName());
