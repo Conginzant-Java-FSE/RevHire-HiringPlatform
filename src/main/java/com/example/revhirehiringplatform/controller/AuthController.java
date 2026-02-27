@@ -1,7 +1,10 @@
 package com.example.revhirehiringplatform.controller;
 
 import com.example.revhirehiringplatform.dto.response.AuthResponse;
+import com.example.revhirehiringplatform.dto.request.ForgotPasswordRequest;
+import com.example.revhirehiringplatform.dto.request.ResetPasswordRequest;
 import com.example.revhirehiringplatform.dto.request.TokenRefreshRequest;
+import com.example.revhirehiringplatform.dto.request.UpdatePasswordRequest;
 import com.example.revhirehiringplatform.dto.request.UserLoginRequest;
 import com.example.revhirehiringplatform.dto.request.UserRegistrationRequest;
 import com.example.revhirehiringplatform.model.RefreshToken;
@@ -17,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +43,11 @@ public class AuthController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/login")
+    public ResponseEntity<?> getLoginInfo() {
+        return ResponseEntity.ok("To login, please send a POST request with email and password.");
     }
 
     @PostMapping("/login")
@@ -100,5 +109,41 @@ public class AuthController {
             refreshTokenService.deleteByUserId(userId);
         }
         return ResponseEntity.ok("Log out successful");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            authService.initiatePasswordReset(request.getEmail());
+            return ResponseEntity.ok("If an account exists with that email, a reset token has been generated.");
+        } catch (Exception e) {
+            // We return OK even if not found for security reasons (don't leak emails)
+            return ResponseEntity.ok("If an account exists with that email, a reset token has been generated.");
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
+            authService.resetPassword(request.getToken(), request.getNewPassword());
+            return ResponseEntity.ok("Password reset successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/update-password")
+    public ResponseEntity<?> updatePassword(@Valid @RequestBody UpdatePasswordRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+        try {
+            User user = authService.getUserById(userDetails.getId());
+            authService.updatePassword(user, request.getOldPassword(), request.getNewPassword());
+            return ResponseEntity.ok("Password updated successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
