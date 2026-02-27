@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/employer/profile")
+@RequestMapping("/api/company/register")
 @RequiredArgsConstructor
 @Slf4j
 public class CompanyController {
@@ -30,6 +30,7 @@ public class CompanyController {
     private final UserRepository userRepository;
     private final JobPostRepository jobPostRepository;
     private final ApplicationRepository applicationRepository;
+    private final EmployerProfileRepository employerProfileRepository;
 
     private User getUserFromContext(UserDetailsImpl userDetails) {
         if (userDetails == null)
@@ -46,6 +47,7 @@ public class CompanyController {
             return ResponseEntity.status(403).body("Unauthorized");
         }
         try {
+            companyDto.setId(null);
             CompanyResponse company = companyService.createOrUpdateCompanyProfile(companyDto, user);
             return ResponseEntity.ok(company);
         } catch (RuntimeException e) {
@@ -115,5 +117,46 @@ public class CompanyController {
         stats.put("pendingReviews", pendingReviews);
 
         return ResponseEntity.ok(stats);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateCompany(@PathVariable("id") Long id, @Valid @RequestBody CompanyRequest companyDto,
+                                           @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.EMPLOYER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            companyDto.setId(id);
+            CompanyResponse company = companyService.createOrUpdateCompanyProfile(companyDto, user);
+            return ResponseEntity.ok(company);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteCompany(@PathVariable("id") Long id,
+                                           @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.EMPLOYER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            companyService.deleteCompany(id, user);
+            return ResponseEntity.ok("Company deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/jobs")
+    public ResponseEntity<?> getCompanyJobs(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(jobPostRepository.findByCompanyId(id));
+    }
+
+    @GetMapping("/{id}/employees")
+    public ResponseEntity<?> getCompanyEmployees(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(employerProfileRepository.findByCompanyId(id));
     }
 }

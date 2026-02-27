@@ -19,8 +19,11 @@ import java.util.Optional;
 @Slf4j
 public class CompanyService {
 
+    private static final String COMPANY_NOT_FOUND = "Company not found";
+
     private final CompanyRepository companyRepository;
     private final EmployerProfileRepository employerProfileRepository;
+    private final com.example.revhirehiringplatform.repository.JobPostRepository jobPostRepository;
 
     @Transactional
     public CompanyResponse createOrUpdateCompanyProfile(CompanyRequest companyDto, User user) {
@@ -29,14 +32,14 @@ public class CompanyService {
         Company company;
         if (companyDto.getId() != null) {
             company = companyRepository.findById(companyDto.getId())
-                    .orElseThrow(() -> new RuntimeException("Company not found"));
+                    .orElseThrow(() -> new RuntimeException(COMPANY_NOT_FOUND));
 
-            // Security check: only creator can update
+
             if (company.getCreatedBy() != null && !company.getCreatedBy().getId().equals(user.getId())) {
                 throw new RuntimeException("Unauthorized to update this company");
             }
         } else {
-            // Check if user already has a company
+
             java.util.List<Company> existingCompanies = companyRepository.findByCreatedByOrderByNameAsc(user);
             if (!existingCompanies.isEmpty()) {
                 throw new RuntimeException("You can only have one company profile");
@@ -54,7 +57,7 @@ public class CompanyService {
 
         company = companyRepository.save(company);
 
-        // Maintain EmployerProfile for backward compatibility or primary company link
+
         Optional<EmployerProfile> profileOpt = employerProfileRepository.findByUserId(user.getId());
         if (profileOpt.isEmpty()) {
             EmployerProfile newProfile = new EmployerProfile();
@@ -74,14 +77,37 @@ public class CompanyService {
     public CompanyResponse getCompanyProfile(User user) {
         Company company = employerProfileRepository.findByUserId(user.getId())
                 .map(EmployerProfile::getCompany)
-                .orElse(null); // Return null instead of throw to allow UI to handle no company state
+                .orElse(null);
         return company != null ? mapToDto(company) : null;
     }
 
     public CompanyResponse getCompanyById(Long id) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Company not found"));
+                .orElseThrow(() -> new RuntimeException(COMPANY_NOT_FOUND));
         return mapToDto(company);
+    }
+
+    @Transactional
+    public void deleteCompany(Long id, User user) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(COMPANY_NOT_FOUND));
+
+        if (company.getCreatedBy() != null && !company.getCreatedBy().getId().equals(user.getId())) {
+            throw new IllegalStateException("Unauthorized to delete this company");
+        }
+
+
+        if (!jobPostRepository.findByCompanyId(id).isEmpty()) {
+            throw new IllegalStateException(
+                    "Cannot delete company with active job posts. Please delete the jobs first.");
+        }
+
+
+        java.util.List<EmployerProfile> profiles = employerProfileRepository.findByCompanyId(id);
+        employerProfileRepository.deleteAll(profiles);
+
+        companyRepository.delete(company);
+        log.info("Company deleted: {} by user: {}", id, user.getEmail());
     }
 
     private CompanyResponse mapToDto(Company company) {
