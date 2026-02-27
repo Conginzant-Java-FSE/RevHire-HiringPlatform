@@ -23,5 +23,5 @@ public class UserRegistrationRequest {
 
     private String phone;
     private String location;
-    private String employmentStatus;
+    private String employmentStatus; // FRESHER, EMPLOYED, UNEMPLOYED
 }
