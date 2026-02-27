@@ -34,7 +34,7 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    private Boolean status = true;
+    private Boolean status = true; // Active/Inactive
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -45,6 +45,6 @@ public class User {
     private LocalDateTime updatedAt;
 
     public enum Role {
-        JOB_SEEKER, EMPLOYER
+        JOB_SEEKER, EMPLOYER, ADMIN
     }
 }

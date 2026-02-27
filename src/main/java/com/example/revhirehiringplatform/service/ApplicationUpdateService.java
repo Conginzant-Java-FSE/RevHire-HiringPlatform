@@ -20,7 +20,7 @@ public class ApplicationUpdateService {
 
     @Transactional
     public com.example.revhirehiringplatform.dto.response.ApplicationNoteResponse addNoteToApplication(Long applicationId, String noteText,
-            User employer) {
+                                                                                 User employer) {
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 

@@ -76,4 +76,40 @@ public class NotificationController {
         notificationService.markAllAsRead(user);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteNotification(@PathVariable("id") Long id,
+                                                @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        return ResponseEntity.ok("Notification deleted");
+    }
+
+    @DeleteMapping("/all")
+    public ResponseEntity<?> deleteAllNotifications(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+        return ResponseEntity.ok("All notifications deleted");
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getNotification(@PathVariable("id") Long id,
+                                             @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+        return ResponseEntity.ok("Notification details");
+    }
+
+    @PostMapping("/broadcast")
+    public ResponseEntity<?> broadcastNotification(@RequestBody Notification notification) {
+
+        return ResponseEntity.ok("Broadcast sent");
+    }
 }

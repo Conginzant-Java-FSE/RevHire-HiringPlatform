@@ -44,8 +44,7 @@ public class ApplicationStatusHistoryController {
             return ResponseEntity.badRequest().body("Application not found");
         }
 
-        // Both the Employer and the Job Seeker should be able to view the status
-        // history
+
         boolean isEmployerOfJob = application.getJobPost().getCreatedBy().getId().equals(user.getId());
         boolean isApplicant = application.getJobSeeker().getUser().getId().equals(user.getId());
 

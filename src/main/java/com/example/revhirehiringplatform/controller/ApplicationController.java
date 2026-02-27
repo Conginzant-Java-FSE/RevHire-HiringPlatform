@@ -5,6 +5,7 @@ package com.example.revhirehiringplatform.controller;
 import com.example.revhirehiringplatform.dto.response.ApplicationResponse;
 import com.example.revhirehiringplatform.dto.request.ApplicationNoteRequest;
 import com.example.revhirehiringplatform.dto.response.ApplicationNoteResponse;
+import com.example.revhirehiringplatform.dto.response.ApplicationSummaryResponse;
 import com.example.revhirehiringplatform.model.Application;
 import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.security.UserDetailsImpl;
@@ -26,7 +27,6 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
     private final com.example.revhirehiringplatform.service.ApplicationWithdrawalService withdrawalService;
-    private final com.example.revhirehiringplatform.service.ApplicationUpdateService updateService;
     private final UserRepository userRepository;
 
     private User getUserFromContext(UserDetailsImpl userDetails) {
@@ -112,22 +112,6 @@ public class ApplicationController {
         }
     }
 
-    @PostMapping("/{applicationId}/notes")
-    public ResponseEntity<?> addNoteToApplication(@PathVariable("applicationId") Long applicationId,
-                                                  @RequestBody ApplicationNoteRequest note, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        User user = getUserFromContext(userDetails);
-        if (user == null || user.getRole() != User.Role.EMPLOYER) {
-            return ResponseEntity.status(403).body("Unauthorized");
-        }
-        try {
-            ApplicationNoteResponse applicationNote = updateService.addNoteToApplication(applicationId,
-                    note.getNoteText(), user);
-            return ResponseEntity.ok(applicationNote);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
     @PutMapping("/bulk-status")
     public ResponseEntity<?> updateBulkStatus(
             @RequestBody java.util.Map<String, Object> request, @AuthenticationPrincipal UserDetailsImpl userDetails) {
@@ -168,6 +152,36 @@ public class ApplicationController {
             List<ApplicationResponse> applications = applicationService.searchApplicantsForJob(
                     jobId, name, skill, experience, education, appliedAfter, status, user);
             return ResponseEntity.ok(applications);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{applicationId}")
+    public ResponseEntity<?> deleteApplication(@PathVariable("applicationId") Long applicationId,
+                                               @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            applicationService.deleteApplication(applicationId, user);
+            return ResponseEntity.ok("Application deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/job/{jobId}/summary")
+    public ResponseEntity<?> getApplicationSummary(@PathVariable("jobId") Long jobId,
+                                                   @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.EMPLOYER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            ApplicationSummaryResponse summary = applicationService.getApplicationSummary(jobId, user);
+            return ResponseEntity.ok(summary);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
