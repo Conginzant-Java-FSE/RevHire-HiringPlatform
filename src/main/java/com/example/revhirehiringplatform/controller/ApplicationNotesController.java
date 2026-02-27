@@ -22,6 +22,8 @@ import java.util.List;
 @Slf4j
 public class ApplicationNotesController {
 
+    private static final String UNAUTHORIZED_MSG = "Unauthorized";
+
     private final ApplicationNotesRepository notesRepository;
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
@@ -37,7 +39,7 @@ public class ApplicationNotesController {
                                                     @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
-            return ResponseEntity.status(403).body("Unauthorized");
+            return ResponseEntity.status(403).body(UNAUTHORIZED_MSG);
         }
 
 
@@ -54,6 +56,60 @@ public class ApplicationNotesController {
                 .toList();
 
         return ResponseEntity.ok(notes);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> addNote(@PathVariable("applicationId") Long applicationId,
+                                     @RequestBody String noteText,
+                                     @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.EMPLOYER) {
+            return ResponseEntity.status(403).body(UNAUTHORIZED_MSG);
+        }
+        com.example.revhirehiringplatform.model.Application application = applicationRepository.findById(applicationId).orElse(null);
+        if (application == null) {
+            return ResponseEntity.badRequest().body("Application not found");
+        }
+        ApplicationNotes note = new ApplicationNotes();
+        note.setApplication(application);
+        note.setNoteText(noteText);
+        note.setCreatedBy(user);
+        return ResponseEntity.ok(mapToDto(notesRepository.save(note)));
+    }
+
+    @GetMapping("/{noteId}")
+    public ResponseEntity<?> getNoteById(@PathVariable("noteId") Long noteId) {
+        return notesRepository.findById(noteId)
+                .map(this::mapToDto)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{noteId}")
+    public ResponseEntity<?> updateNote(@PathVariable("noteId") Long noteId,
+                                        @RequestBody String noteText,
+                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        return notesRepository.findById(noteId).map(note -> {
+            if (!note.getCreatedBy().getId().equals(user.getId())) {
+                return ResponseEntity.status(403).body(UNAUTHORIZED_MSG);
+            }
+            note.setNoteText(noteText);
+            return ResponseEntity.ok(mapToDto(notesRepository.save(note)));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{noteId}")
+    public ResponseEntity<?> deleteNote(@PathVariable("noteId") Long noteId,
+                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        return notesRepository.findById(noteId).map(note -> {
+            if (!note.getCreatedBy().getId().equals(user.getId())) {
+                return ResponseEntity.status(403).body(UNAUTHORIZED_MSG);
+            }
+            notesRepository.delete(note);
+            return ResponseEntity.ok().build();
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     private ApplicationNoteResponse mapToDto(ApplicationNotes note) {

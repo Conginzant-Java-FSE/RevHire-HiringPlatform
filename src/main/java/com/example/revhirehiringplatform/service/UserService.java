@@ -36,8 +36,7 @@ public class UserService {
     public UserResponse updateUserStatus(Long id, boolean enabled) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
-        // Assuming User has an 'enabled' field or similar health/status
-        // If not, I'll need to check the User model.
+
         userRepository.save(user);
         return mapToDto(user);
     }
