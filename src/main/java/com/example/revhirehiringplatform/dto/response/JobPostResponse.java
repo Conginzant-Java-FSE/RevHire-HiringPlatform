@@ -19,4 +19,5 @@ public class JobPostResponse {
     private String companyName;
     private String education;
     private Integer openings;
+    private String status;
 }

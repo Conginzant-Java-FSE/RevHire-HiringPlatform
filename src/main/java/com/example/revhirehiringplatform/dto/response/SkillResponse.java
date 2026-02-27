@@ -6,5 +6,5 @@ import lombok.Data;
 public class SkillResponse {
     private Long id;
     private String name;
-    private String level; // BEGINNER, INTERMEDIATE, EXPERT
+    private String level;
 }

@@ -1,7 +1,9 @@
 package com.example.revhirehiringplatform.controller;
 
 import com.example.revhirehiringplatform.dto.request.JobPostRequest;
+import com.example.revhirehiringplatform.dto.response.ApplicationResponse;
 import com.example.revhirehiringplatform.dto.response.JobPostResponse;
+import com.example.revhirehiringplatform.dto.response.SkillResponse;
 import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.model.JobPost;
 import com.example.revhirehiringplatform.security.UserDetailsImpl;
@@ -94,7 +96,6 @@ public class JobController {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can edit jobs");
         }
         try {
-            // Note: Service logic should verify the employer owns the job
             JobPostResponse updatedJob = jobService.updateJob(id, jobDto, user);
             return ResponseEntity.ok(updatedJob);
         } catch (RuntimeException e) {
@@ -111,7 +112,6 @@ public class JobController {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can update job status");
         }
         try {
-            // Note: Service logic should verify the employer owns the job
             JobPostResponse updatedJob = jobService.updateJobStatus(id, status, user);
             return ResponseEntity.ok(updatedJob);
         } catch (RuntimeException e) {
@@ -129,6 +129,31 @@ public class JobController {
         try {
             jobService.deleteJob(id, user); // Needs implementation in JobService
             return ResponseEntity.ok("Job deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/applications")
+    public ResponseEntity<?> getJobApplications(@PathVariable("id") Long id,
+                                                @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.EMPLOYER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            List<ApplicationResponse> applications = jobService.getJobApplications(id, user);
+            return ResponseEntity.ok(applications);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/skills")
+    public ResponseEntity<?> getJobSkills(@PathVariable("id") Long id) {
+        try {
+            List<SkillResponse> skills = jobService.getJobSkills(id);
+            return ResponseEntity.ok(skills);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
