@@ -1,4 +1,4 @@
-package com.example.revhirehiringplatform.dto.response;
+package com.revhire.dto.response;
 
 import lombok.Data;
 import java.util.List;

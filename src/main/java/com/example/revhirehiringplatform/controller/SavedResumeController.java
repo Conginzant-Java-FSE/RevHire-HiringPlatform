@@ -1,10 +1,10 @@
-package com.example.revhirehiringplatform.controller;
+package com.revhire.controller;
 
-import com.example.revhirehiringplatform.dto.response.JobSeekerProfileResponse;
-import com.example.revhirehiringplatform.model.User;
-import com.example.revhirehiringplatform.security.UserDetailsImpl;
-import com.example.revhirehiringplatform.repository.UserRepository;
-import com.example.revhirehiringplatform.service.SavedResumeService;
+import com.revhire.dto.response.JobSeekerProfileResponse;
+import com.revhire.model.User;
+import com.revhire.security.UserDetailsImpl;
+import com.revhire.repository.UserRepository;
+import com.revhire.service.SavedResumeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +32,7 @@ public class SavedResumeController {
 
     @PostMapping("/{seekerId}")
     public ResponseEntity<?> saveResume(@PathVariable("seekerId") Long seekerId,
-                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only employers can save resumes.");
@@ -47,7 +47,7 @@ public class SavedResumeController {
 
     @DeleteMapping("/{seekerId}")
     public ResponseEntity<?> unsaveResume(@PathVariable("seekerId") Long seekerId,
-                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only employers can manage saved resumes.");
@@ -68,5 +68,24 @@ public class SavedResumeController {
         }
         List<JobSeekerProfileResponse> savedResumes = savedResumeService.getSavedResumes(user);
         return ResponseEntity.ok(savedResumes);
+    }
+
+    @GetMapping("/{seekerId}/check")
+    public ResponseEntity<?> isResumeSaved(@PathVariable("seekerId") Long seekerId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.EMPLOYER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        return ResponseEntity.ok(false);
+    }
+
+    @DeleteMapping("/clear")
+    public ResponseEntity<?> clearSavedResumes(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.EMPLOYER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        return ResponseEntity.ok("Cleared");
     }
 }

@@ -1,15 +1,16 @@
-package com.example.revhirehiringplatform.controller;
+package com.revhire.controller;
 
-
-import com.example.revhirehiringplatform.dto.request.JobSeekerProfileRequest;
-import com.example.revhirehiringplatform.dto.request.ResumeTextRequest;
-import com.example.revhirehiringplatform.dto.response.JobSeekerProfileResponse;
-import com.example.revhirehiringplatform.model.JobSeekerProfile;
-import com.example.revhirehiringplatform.model.ResumeText;
-import com.example.revhirehiringplatform.model.User;
-import com.example.revhirehiringplatform.repository.UserRepository;
-import com.example.revhirehiringplatform.security.UserDetailsImpl;
-import com.example.revhirehiringplatform.service.JobSeekerProfileService;
+import com.revhire.dto.request.JobSeekerProfileRequest;
+import com.revhire.dto.request.ResumeTextRequest;
+import com.revhire.dto.response.ApplicationResponse;
+import com.revhire.dto.response.JobSeekerProfileResponse;
+import com.revhire.dto.response.SkillResponse;
+import com.revhire.model.JobSeekerProfile;
+import com.revhire.model.ResumeText;
+import com.revhire.model.User;
+import com.revhire.security.UserDetailsImpl;
+import com.revhire.repository.UserRepository;
+import com.revhire.service.JobSeekerProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -26,7 +28,7 @@ import java.util.Optional;
 public class JobSeekerProfileController {
 
     private final JobSeekerProfileService profileService;
-    private final com.example.revhirehiringplatform.service.JobSeekerResumeService resumeService;
+    private final com.revhire.service.JobSeekerResumeService resumeService;
     private final UserRepository userRepository;
 
     private User getUserFromContext(UserDetailsImpl userDetails) {
@@ -43,7 +45,14 @@ public class JobSeekerProfileController {
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         User user = getUserFromContext(userDetails);
+        log.info("Update profile request for user: {}. UserDetails: {}",
+                user != null ? user.getEmail() : "null",
+                userDetails != null ? userDetails.getUsername() : "null");
+
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
+            log.warn("Unauthorized access to update profile. User: {}, Role: {}",
+                    user != null ? user.getEmail() : "null",
+                    user != null ? user.getRole() : "null");
             return ResponseEntity.status(403).body("Unauthorized");
         }
         try {
@@ -82,13 +91,26 @@ public class JobSeekerProfileController {
             JobSeekerProfile profile = profileService.getProfile(user);
 
             JobSeekerProfileResponse dto = new JobSeekerProfileResponse();
+            dto.setId(profile.getId());
+            dto.setName(user.getName());
+            dto.setEmail(user.getEmail());
             dto.setHeadline(profile.getHeadline());
             dto.setSummary(profile.getSummary());
             dto.setLocation(profile.getLocation());
-            if (profile.getUser() != null) {
-                dto.setPhone(profile.getUser().getPhone());
-            }
+            dto.setPhone(user.getPhone());
             dto.setEmploymentStatus(profile.getEmploymentStatus());
+
+            // Populate Resume Text Fields
+            ResumeText resumeText = profileService.getResumeText(profile.getId());
+            if (resumeText != null) {
+                dto.setObjective(resumeText.getObjective());
+                dto.setEducation(resumeText.getEducationText());
+                dto.setExperience(resumeText.getExperienceText());
+                dto.setSkills(resumeText.getSkillsText());
+                dto.setProjects(resumeText.getProjectsText());
+                dto.setCertifications(resumeText.getCertificationsText());
+            }
+            dto.setSkillsList(profileService.getSeekerSkills(profile.getId()));
 
             return ResponseEntity.ok(dto);
         } catch (RuntimeException e) {
@@ -140,7 +162,7 @@ public class JobSeekerProfileController {
 
     @GetMapping("/{seekerId}")
     public ResponseEntity<?> getProfileById(@PathVariable("seekerId") Long seekerId,
-                                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can view full profiles.");
@@ -149,13 +171,26 @@ public class JobSeekerProfileController {
             JobSeekerProfile profile = profileService.getProfileById(seekerId);
 
             JobSeekerProfileResponse dto = new JobSeekerProfileResponse();
+            dto.setId(profile.getId());
+            dto.setName(profile.getUser() != null ? profile.getUser().getName() : null);
+            dto.setEmail(profile.getUser() != null ? profile.getUser().getEmail() : null);
             dto.setHeadline(profile.getHeadline());
             dto.setSummary(profile.getSummary());
             dto.setLocation(profile.getLocation());
-            if (profile.getUser() != null) {
-                dto.setPhone(profile.getUser().getPhone());
-            }
+            dto.setPhone(profile.getUser() != null ? profile.getUser().getPhone() : null);
             dto.setEmploymentStatus(profile.getEmploymentStatus());
+
+            // Populate Resume Text Fields for Employer view
+            ResumeText resumeText = profileService.getResumeText(profile.getId());
+            if (resumeText != null) {
+                dto.setObjective(resumeText.getObjective());
+                dto.setEducation(resumeText.getEducationText());
+                dto.setExperience(resumeText.getExperienceText());
+                dto.setSkills(resumeText.getSkillsText());
+                dto.setProjects(resumeText.getProjectsText());
+                dto.setCertifications(resumeText.getCertificationsText());
+            }
+            dto.setSkillsList(profileService.getSeekerSkills(profile.getId()));
 
             return ResponseEntity.ok(dto);
         } catch (RuntimeException e) {
@@ -165,13 +200,13 @@ public class JobSeekerProfileController {
 
     @GetMapping("/{seekerId}/resume/download")
     public ResponseEntity<?> downloadResume(@PathVariable("seekerId") Long seekerId,
-                                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can download resumes.");
         }
         try {
-            com.example.revhirehiringplatform.model.ResumeFiles resumeFile = resumeService.getResumeFile(seekerId);
+            com.revhire.model.ResumeFiles resumeFile = resumeService.getResumeFile(seekerId);
             if (resumeFile == null) {
                 return ResponseEntity.notFound().build(); // No active resume found
             }
@@ -193,6 +228,62 @@ public class JobSeekerProfileController {
         } catch (Exception e) {
             log.error("Error downloading resume", e);
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PutMapping("/{seekerId}")
+    public ResponseEntity<?> updateProfileById(@PathVariable("seekerId") Long seekerId,
+            @RequestBody JobSeekerProfileRequest profileDto,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || !user.getId().equals(seekerId)) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            JobSeekerProfile profile = profileService.updateProfile(profileDto, null, user);
+            return ResponseEntity.ok(profile);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{seekerId}")
+    public ResponseEntity<?> deleteProfile(@PathVariable("seekerId") Long seekerId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            profileService.deleteProfile(seekerId, user);
+            return ResponseEntity.ok("Profile deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{seekerId}/applications")
+    public ResponseEntity<?> getSeekerApplications(@PathVariable("seekerId") Long seekerId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            List<ApplicationResponse> applications = profileService.getSeekerApplications(seekerId, user);
+            return ResponseEntity.ok(applications);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{seekerId}/skills")
+    public ResponseEntity<?> getSeekerSkills(@PathVariable("seekerId") Long seekerId) {
+        try {
+            List<SkillResponse> skills = profileService.getSeekerSkills(seekerId);
+            return ResponseEntity.ok(skills);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

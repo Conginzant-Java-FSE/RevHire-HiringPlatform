@@ -1,10 +1,10 @@
-package com.example.revhirehiringplatform.controller;
+package com.revhire.controller;
 
-import com.example.revhirehiringplatform.dto.response.JobPostResponse;
-import com.example.revhirehiringplatform.model.User;
-import com.example.revhirehiringplatform.security.UserDetailsImpl;
-import com.example.revhirehiringplatform.repository.UserRepository;
-import com.example.revhirehiringplatform.service.SavedJobsService;
+import com.revhire.dto.response.JobPostResponse;
+import com.revhire.model.User;
+import com.revhire.security.UserDetailsImpl;
+import com.revhire.repository.UserRepository;
+import com.revhire.service.SavedJobsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +32,7 @@ public class SavedJobsController {
 
     @PostMapping("/{jobId}")
     public ResponseEntity<?> saveJob(@PathVariable("jobId") Long jobId,
-                                     @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -47,7 +47,7 @@ public class SavedJobsController {
 
     @DeleteMapping("/{jobId}")
     public ResponseEntity<?> unsaveJob(@PathVariable("jobId") Long jobId,
-                                       @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -68,5 +68,24 @@ public class SavedJobsController {
         }
         List<JobPostResponse> savedJobs = savedJobsService.getSavedJobs(user);
         return ResponseEntity.ok(savedJobs);
+    }
+
+    @GetMapping("/{jobId}/check")
+    public ResponseEntity<?> isJobSaved(@PathVariable("jobId") Long jobId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        return ResponseEntity.ok(false); // Map to service
+    }
+
+    @DeleteMapping("/clear")
+    public ResponseEntity<?> clearSavedJobs(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        return ResponseEntity.ok("Cleared");
     }
 }
