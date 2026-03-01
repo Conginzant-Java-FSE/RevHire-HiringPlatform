@@ -1,4 +1,4 @@
-package com.example.revhirehiringplatform.dto.request;
+package com.revhire.dto.request;
 
 import lombok.Data;
 
