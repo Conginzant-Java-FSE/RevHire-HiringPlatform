@@ -1,5 +1,6 @@
 package com.example.revhirehiringplatform.DTO.request;
 
+import com.example.revhirehiringplatform.dto.request.UpdatePasswordRequest;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
