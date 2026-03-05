@@ -17,7 +17,6 @@ import java.util.UUID;
 @Slf4j
 public class RefreshTokenService {
 
-
     private final Long refreshTokenDurationMs = 2592000000L;
 
     private final RefreshTokenRepository refreshTokenRepository;

@@ -4,6 +4,7 @@ import com.example.revhirehiringplatform.dto.request.UserRegistrationRequest;
 import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,43 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final com.example.revhirehiringplatform.repository.JobSeekerProfileRepository jobSeekerProfileRepository;
+    private final com.example.revhirehiringplatform.repository.CompanyRepository companyRepository;
+    private final com.example.revhirehiringplatform.repository.EmployerProfileRepository employerProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
     private final com.example.revhirehiringplatform.repository.PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
+    private final com.example.revhirehiringplatform.repository.OtpVerificationRepository otpVerificationRepository;
+
+    @Value("${app.frontend.url:http://localhost:4200}")
+    private String frontendUrl;
+
+    @Transactional
+    public void generateAndSendOtp(String email) {
+        log.info("Generating OTP for: {}", email);
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email already in use");
+        }
+
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        com.example.revhirehiringplatform.model.OtpVerification otpVerification = otpVerificationRepository.findByEmail(email)
+                .map(existing -> {
+                    existing.setOtp(otp);
+                    existing.setExpiryDate(java.time.LocalDateTime.now().plusMinutes(5));
+                    return existing;
+                })
+                .orElseGet(() -> new com.example.revhirehiringplatform.model.OtpVerification(email, otp, 5));
+
+        otpVerificationRepository.save(otpVerification);
+        emailService.sendOtpEmail(email, otp);
+    }
+
+    public boolean verifyOtp(String email, String otp) {
+        log.info("Verifying OTP for: {}", email);
+        return otpVerificationRepository.findByEmail(email)
+                .map(v -> v.getOtp().equals(otp) && v.getExpiryDate().isAfter(java.time.LocalDateTime.now()))
+                .orElse(false);
+    }
 
     @Transactional
     public void initiatePasswordReset(String email) {
@@ -26,18 +61,25 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
-        // Delete existing tokens if any
-        passwordResetTokenRepository.deleteByUser(user);
-
         String token = java.util.UUID.randomUUID().toString();
-        com.example.revhirehiringplatform.model.PasswordResetToken resetToken = new com.example.revhirehiringplatform.model.PasswordResetToken(token, user, 30); // 30
-                                                                                                                     // mins
-                                                                                                                     // expiry
+        com.example.revhirehiringplatform.model.PasswordResetToken resetToken = passwordResetTokenRepository.findByUser(user)
+                .map(existing -> {
+                    existing.setToken(token);
+                    existing.setExpiryDate(java.time.LocalDateTime.now().plusMinutes(30));
+                    return existing;
+                })
+                .orElseGet(() -> new com.example.revhirehiringplatform.model.PasswordResetToken(token, user, 30));
+
         passwordResetTokenRepository.save(resetToken);
 
-        // Simulate sending email
-        log.info("Password reset token generated for {}: {}", email, token);
-        // In a real app, send email here.
+        String resetLink = frontendUrl + "/reset-password?token=" + token;
+        try {
+            emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
+            log.info("Password reset email sent for {}", email);
+        } catch (Exception ex) {
+            log.error("Password reset email failed for {}", email, ex);
+            throw new RuntimeException("Failed to send reset email", ex);
+        }
     }
 
     @Transactional
@@ -64,8 +106,15 @@ public class AuthService {
     @Transactional
     public void updatePassword(User user, String oldPassword, String newPassword) {
         log.info("Updating password for user: {}", user.getEmail());
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+        boolean matches = passwordEncoder.matches(oldPassword, user.getPassword());
+        log.info("Old password match result: {}", matches);
+        if (!matches) {
+            log.warn("Password update failed: Invalid old password for user {}", user.getEmail());
             throw new IllegalArgumentException("Invalid old password");
+        }
+        if (oldPassword.equals(newPassword)) {
+            log.warn("Password update failed: New password matches current password for user {}", user.getEmail());
+            throw new IllegalArgumentException("New password must be different from current password");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -91,16 +140,26 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        // If Job Seeker, create initial profile
         if (savedUser.getRole() == User.Role.JOB_SEEKER) {
             com.example.revhirehiringplatform.model.JobSeekerProfile profile = new com.example.revhirehiringplatform.model.JobSeekerProfile();
             profile.setUser(savedUser);
             profile.setLocation(registrationDto.getLocation());
             profile.setEmploymentStatus(registrationDto.getEmploymentStatus());
             jobSeekerProfileRepository.save(profile);
+        } else if (savedUser.getRole() == User.Role.EMPLOYER) {
+            com.example.revhirehiringplatform.model.Company company = new com.example.revhirehiringplatform.model.Company();
+            company.setName(registrationDto.getCompanyName() != null ? registrationDto.getCompanyName()
+                    : savedUser.getName() + "'s Company");
+            company.setCreatedBy(savedUser);
+            company = companyRepository.save(company);
+
+            com.example.revhirehiringplatform.model.EmployerProfile profile = new com.example.revhirehiringplatform.model.EmployerProfile();
+            profile.setUser(savedUser);
+            profile.setCompany(company);
+            profile.setDesignation("HR / Admin");
+            employerProfileRepository.save(profile);
         }
 
-        // Audit logging
         auditLogService.logAction(
                 "User",
                 savedUser.getId(),
@@ -110,6 +169,13 @@ public class AuthService {
                 savedUser);
 
         log.info("User registered successfully: {}", savedUser.getId());
+
+        try {
+            emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getName());
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}", savedUser.getEmail(), e);
+        }
+
         return savedUser;
     }
 

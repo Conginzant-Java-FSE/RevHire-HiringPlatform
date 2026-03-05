@@ -1,5 +1,6 @@
 package com.example.revhirehiringplatform.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,50 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private JobSeekerProfile jobSeekerProfile;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private EmployerProfile employerProfile;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<Company> companiesCreated;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<JobPost> jobPosts;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<Notification> notifications;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<RefreshToken> refreshTokens;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private PasswordResetToken passwordResetToken;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "employer", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<SavedResume> savedResumes;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "changedBy", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<AuditLog> auditLogs;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<ApplicationNotes> applicationNotes;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "changedBy", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<ApplicationStatusHistory> applicationStatusChanges;
+
     @Column(nullable = false)
     private String name;
 
@@ -34,7 +79,7 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    private Boolean status = true; // Active/Inactive
+    private Boolean status = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

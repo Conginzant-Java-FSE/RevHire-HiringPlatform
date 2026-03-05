@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -49,25 +50,79 @@ public class ApplicationService {
                 JobPost jobPost = jobPostRepository.findById(jobId)
                         .orElseThrow(() -> new RuntimeException("Job not found"));
 
-                boolean alreadyApplied = applicationRepository.findByJobSeekerId(profile.getId()).stream()
-                        .anyMatch(app -> app.getJobPost().getId().equals(jobId));
+                if (jobPost.getDeadline() != null && LocalDate.now().isAfter(jobPost.getDeadline())) {
+                        throw new RuntimeException("Registration closed");
+                }
 
-                if (alreadyApplied) {
+                Application existing = applicationRepository.findByJobSeekerId(profile.getId()).stream()
+                        .filter(app -> app.getJobPost().getId().equals(jobId))
+                        .findFirst()
+                        .orElse(null);
+
+                if (existing != null) {
+                        if (existing.getStatus() == Application.ApplicationStatus.WITHDRAWN) {
+                                Application.ApplicationStatus oldStatus = existing.getStatus();
+                                existing.setStatus(Application.ApplicationStatus.APPLIED);
+                                existing.setWithdrawReason(null);
+                                Application saved = applicationRepository.save(existing);
+
+                                ApplicationStatusHistory history = new ApplicationStatusHistory();
+                                history.setApplication(saved);
+                                history.setOldStatus(oldStatus.name());
+                                history.setNewStatus(Application.ApplicationStatus.APPLIED.name());
+                                history.setChangedBy(user);
+                                history.setComment("Re-applied after withdrawal");
+                                statusHistoryRepository.save(history);
+
+                                notificationService.createNotification(user,
+                                        "You have re-applied for the " + jobPost.getTitle() + " position at "
+                                                + jobPost.getCompany().getName(),
+                                        true, "Re-application Received: " + jobPost.getTitle(),
+                                        "You have successfully re-applied for the " + jobPost.getTitle()
+                                                + " position at " + jobPost.getCompany().getName()
+                                                + ".");
+
+                                notificationService.createNotification(jobPost.getCreatedBy(),
+                                        "Re-application received for " + jobPost.getTitle() + " from "
+                                                + user.getName(),
+                                        true, "New Re-application for " + jobPost.getTitle(),
+                                        "A new re-application has been received for " + jobPost.getTitle()
+                                                + " from " + user.getName() + ".");
+
+                                auditLogService.logAction(
+                                        "Application",
+                                        saved.getId(),
+                                        "APPLICATION_REAPPLIED",
+                                        oldStatus.name(),
+                                        "Job: " + jobPost.getTitle() + ", Applicant: "
+                                                + profile.getUser().getName(),
+                                        user);
+
+                                return mapToDto(saved);
+                        }
+
                         throw new RuntimeException("You have already applied for this job");
                 }
 
                 Application application = new Application();
                 application.setJobPost(jobPost);
                 application.setJobSeeker(profile);
-
                 application.setStatus(Application.ApplicationStatus.APPLIED);
 
                 Application savedApp = applicationRepository.save(application);
 
-
                 notificationService.createNotification(user,
                         "You have successfully applied for the " + jobPost.getTitle() + " position at "
-                                + jobPost.getCompany().getName());
+                                + jobPost.getCompany().getName(),
+                        true, "Application Received: " + jobPost.getTitle(),
+                        "You have successfully applied for the " + jobPost.getTitle() + " position at "
+                                + jobPost.getCompany().getName() + ".");
+
+                notificationService.createNotification(jobPost.getCreatedBy(),
+                        "New application received for " + jobPost.getTitle() + " from " + user.getName(),
+                        true, "New Application for " + jobPost.getTitle(),
+                        "A new application has been received for " + jobPost.getTitle() + " from "
+                                + user.getName() + ".");
 
                 auditLogService.logAction(
                         "Application",
@@ -85,6 +140,13 @@ public class ApplicationService {
                 JobSeekerProfile profile = profileRepository.findByUserId(user.getId())
                         .orElseThrow(() -> new RuntimeException("Profile not found"));
                 return applicationRepository.findByJobSeekerId(profile.getId()).stream()
+                        .map(this::mapToDto)
+                        .toList();
+        }
+
+        @Transactional(readOnly = true)
+        public List<ApplicationResponse> getApplicationsForEmployer(User employer) {
+                return applicationRepository.findByJobPostCreatedBy(employer).stream()
                         .map(this::mapToDto)
                         .toList();
         }
@@ -125,11 +187,13 @@ public class ApplicationService {
                 history.setComment("Status updated by employer");
                 statusHistoryRepository.save(history);
 
-
                 notificationService.createNotification(
                         application.getJobSeeker().getUser(),
                         "Your application for " + application.getJobPost().getTitle() + " has been updated to "
-                                + status);
+                                + status,
+                        true, "Application Status Update: " + application.getJobPost().getTitle(),
+                        "Your application status for " + application.getJobPost().getTitle()
+                                + " has been updated to: " + status + ".");
 
                 return mapToDto(savedApp);
         }
@@ -157,11 +221,13 @@ public class ApplicationService {
                         history.setComment("Bulk status updated by employer");
                         statusHistoryRepository.save(history);
 
-
                         notificationService.createNotification(
                                 app.getJobSeeker().getUser(),
                                 "Your application for " + app.getJobPost().getTitle() + " has been updated to "
-                                        + status);
+                                        + status,
+                                true, "Application Status Update: " + app.getJobPost().getTitle(),
+                                "Your application status for " + app.getJobPost().getTitle()
+                                        + " has been updated to: " + status + ".");
                 }
 
                 return applications.stream().map(this::mapToDto).toList();
@@ -179,7 +245,6 @@ public class ApplicationService {
                 }
 
                 List<Application> applications = applicationRepository.findByJobPostId(jobId);
-
 
                 if (name != null && !name.trim().isEmpty()) {
                         applications = applications.stream()
@@ -202,11 +267,9 @@ public class ApplicationService {
                                 .toList();
                 }
 
-
                 List<ApplicationResponse> applicationDtos = applications.stream()
                         .map(this::mapToDto)
                         .toList();
-
 
                 if (skill != null && !skill.trim().isEmpty()) {
                         applicationDtos = applicationDtos.stream()
@@ -239,7 +302,6 @@ public class ApplicationService {
         public void deleteApplication(Long applicationId, User user) {
                 Application application = applicationRepository.findById(applicationId)
                         .orElseThrow(() -> new RuntimeException("Application not found"));
-
 
                 boolean isSeeker = user.getRole() == User.Role.JOB_SEEKER
                         && application.getJobSeeker().getUser().getId().equals(user.getId());
@@ -286,7 +348,6 @@ public class ApplicationService {
                 dto.setJobSeekerName(app.getJobSeeker().getUser().getName());
                 dto.setJobSeekerEmail(app.getJobSeeker().getUser().getEmail());
 
-
                 List<SeekerSkillMap> skills = seekerSkillMapRepository.findByJobSeekerId(app.getJobSeeker().getId());
                 if (!skills.isEmpty()) {
                         dto.setJobSeekerSkills(skills.stream()
@@ -296,7 +357,6 @@ public class ApplicationService {
 
                 ResumeText resumeText = resumeTextRepository.findByJobSeekerId(app.getJobSeeker().getId()).orElse(null);
                 if (resumeText != null) {
-
                         if (dto.getJobSeekerSkills() == null) {
                                 dto.setJobSeekerSkills(resumeText.getSkillsText());
                         }

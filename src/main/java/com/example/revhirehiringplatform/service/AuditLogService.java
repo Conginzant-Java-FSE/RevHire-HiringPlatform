@@ -15,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
-
-
     @Transactional(propagation = Propagation.REQUIRED)
     public void logAction(String entityType, Long entityId, String action, String oldValue, String newValue,
                           User changedBy) {
@@ -32,7 +30,6 @@ public class AuditLogService {
             auditLogRepository.save(auditLog);
             log.debug("Audit log created: {} on {} ID: {}", action, entityType, entityId);
         } catch (Exception e) {
-
             log.error("Failed to create audit log: {}", e.getMessage(), e);
         }
     }

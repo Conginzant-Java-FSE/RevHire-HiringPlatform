@@ -50,15 +50,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/admin/login", "/api/auth/register",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password", "/api/auth/refresh",
+                                "/api/auth/send-otp", "/api/auth/verify-otp")
+                        .permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/jobs", "/api/jobs/**")
+                        .permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/audit-logs/public-test").permitAll()
                         .requestMatchers("/api/audit-logs", "/api/audit-logs/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/users", "/api/users/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/dashboard/admin/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());

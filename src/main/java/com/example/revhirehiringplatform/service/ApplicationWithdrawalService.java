@@ -18,6 +18,7 @@ public class ApplicationWithdrawalService {
 
     private final ApplicationRepository applicationRepository;
     private final ApplicationStatusHistoryRepository statusHistoryRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public ApplicationResponse withdrawApplication(Long applicationId, String reason, User user) {
@@ -41,6 +42,19 @@ public class ApplicationWithdrawalService {
         history.setComment("Application withdrawn by job seeker: " + reason);
         statusHistoryRepository.save(history);
 
+        notificationService.createNotification(user,
+                "You have withdrawn your application for the " + application.getJobPost().getTitle() + " position at "
+                        + application.getJobPost().getCompany().getName(),
+                true, "Application Withdrawn: " + application.getJobPost().getTitle(),
+                "Your application for the " + application.getJobPost().getTitle() + " position at "
+                        + application.getJobPost().getCompany().getName() + " has been withdrawn.");
+
+        notificationService.createNotification(application.getJobPost().getCreatedBy(),
+                "Application withdrawn for " + application.getJobPost().getTitle() + " by " + user.getName(),
+                true, "Application Withdrawn for " + application.getJobPost().getTitle(),
+                "The application for " + application.getJobPost().getTitle() + " from " + user.getName()
+                        + " has been withdrawn.");
+
         return mapToDto(savedApp);
     }
 
@@ -53,7 +67,7 @@ public class ApplicationWithdrawalService {
         dto.setJobSeekerId(app.getJobSeeker().getId());
         dto.setJobSeekerName(app.getJobSeeker().getUser().getName());
         dto.setJobSeekerEmail(app.getJobSeeker().getUser().getEmail());
-        dto.setJobSeekerSkills(app.getJobSeeker().getSummary()); // Using summary as placeholder for skills
+        dto.setJobSeekerSkills(app.getJobSeeker().getSummary());
         dto.setStatus(app.getStatus());
         dto.setAppliedAt(app.getAppliedAt());
         return dto;

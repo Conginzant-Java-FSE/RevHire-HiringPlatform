@@ -1,5 +1,6 @@
 package com.example.revhirehiringplatform.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,6 +40,14 @@ public class Application {
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status = ApplicationStatus.APPLIED;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "application", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<ApplicationNotes> applicationNotes;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "application", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<ApplicationStatusHistory> statusHistory;
+
     @Column(name = "withdraw_reason")
     private String withdrawReason;
 
@@ -51,6 +60,6 @@ public class Application {
     private LocalDateTime updatedAt;
 
     public enum ApplicationStatus {
-        APPLIED, UNDER_REVIEW, SHORTLISTED, REJECTED, WITHDRAWN
+        APPLIED, REVIEWING, SHORTLISTED, SELECTED, REJECTED, WITHDRAWN
     }
 }
