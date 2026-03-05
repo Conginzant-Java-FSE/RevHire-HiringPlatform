@@ -1,7 +1,5 @@
 package com.example.revhirehiringplatform.controller;
 
-
-
 import com.example.revhirehiringplatform.dto.response.ApplicationResponse;
 import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.repository.UserRepository;

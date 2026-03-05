@@ -3,7 +3,7 @@ package com.example.revhirehiringplatform.controller;
 
 
 import com.example.revhirehiringplatform.dto.response.JobPostResponse;
-import com.revhire.dto.response.JobSeekerProfileResponse;
+import com.example.revhirehiringplatform.dto.response.JobSeekerProfileResponse;
 import com.example.revhirehiringplatform.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

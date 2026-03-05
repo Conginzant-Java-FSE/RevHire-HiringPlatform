@@ -67,8 +67,8 @@ public class AuthControllerTest {
         void setUp() {
                 MockitoAnnotations.openMocks(this);
                 mockMvc = MockMvcBuilders.standaloneSetup(authController)
-                                .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
-                                .build();
+                        .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
+                        .build();
         }
 
         @AfterEach
@@ -79,9 +79,9 @@ public class AuthControllerTest {
         @Test
         void testLoginInfo() throws Exception {
                 mockMvc.perform(get("/api/auth/login"))
-                                .andExpect(status().isOk())
-                                .andExpect(content().string(
-                                                "To login, please send a POST request with email and password."));
+                        .andExpect(status().isOk())
+                        .andExpect(content().string(
+                                "To login, please send a POST request with email and password."));
         }
 
         @Test
@@ -91,19 +91,19 @@ public class AuthControllerTest {
                 loginDto.setPassword("password");
 
                 UserDetailsImpl userDetails = new UserDetailsImpl(
-                                1L,
-                                "test@example.com",
-                                "test@example.com",
-                                "+1987654321", // Phone number added here
-                                "password",
-                                User.Role.JOB_SEEKER,
-                                Collections.emptyList());
+                        1L,
+                        "test@example.com",
+                        "test@example.com",
+                        "+1987654321", // Phone number added here
+                        "password",
+                        User.Role.JOB_SEEKER,
+                        Collections.emptyList());
 
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
-                                userDetails.getAuthorities());
+                        userDetails.getAuthorities());
 
                 when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                                .thenReturn(authentication);
+                        .thenReturn(authentication);
 
                 when(jwtUtil.generateJwtToken(authentication)).thenReturn("dummy-jwt-token");
 
@@ -111,13 +111,19 @@ public class AuthControllerTest {
                 mockRefreshToken.setToken("dummy-refresh-token");
                 when(refreshTokenService.createRefreshToken(1L)).thenReturn(mockRefreshToken);
 
+
+                User loginUser = new User();
+                loginUser.setId(1L);
+                loginUser.setName("Test User");
+                when(authService.getUserById(1L)).thenReturn(loginUser);
+
                 mockMvc.perform(post("/api/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(loginDto)))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.token").value("dummy-jwt-token"))
-                                .andExpect(jsonPath("$.phone").value("+1987654321"))
-                                .andExpect(jsonPath("$.email").value("test@example.com"));
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.token").value("dummy-jwt-token"))
+                        .andExpect(jsonPath("$.phone").value("+1987654321"))
+                        .andExpect(jsonPath("$.email").value("test@example.com"));
         }
 
         @Test
@@ -127,13 +133,13 @@ public class AuthControllerTest {
                 loginDto.setPassword("wrong");
 
                 when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                                .thenThrow(new RuntimeException("Bad credentials"));
+                        .thenThrow(new RuntimeException("Bad credentials"));
 
                 mockMvc.perform(post("/api/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(loginDto)))
-                                .andExpect(status().isUnauthorized())
-                                .andExpect(content().string("Invalid email or password"));
+                        .andExpect(status().isUnauthorized())
+                        .andExpect(content().string("Invalid email or password"));
         }
 
         @Test
@@ -157,11 +163,11 @@ public class AuthControllerTest {
                 mockMvc.perform(post("/api/auth/register")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(regDto)))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.id").value(10))
-                                .andExpect(jsonPath("$.name").value("Jane Doe"))
-                                .andExpect(jsonPath("$.phone").value("+111222333"))
-                                .andExpect(jsonPath("$.role").value("JOB_SEEKER"));
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value(10))
+                        .andExpect(jsonPath("$.name").value("Jane Doe"))
+                        .andExpect(jsonPath("$.phone").value("+111222333"))
+                        .andExpect(jsonPath("$.role").value("JOB_SEEKER"));
         }
 
         @Test
@@ -174,13 +180,13 @@ public class AuthControllerTest {
                 regDto.setRole(User.Role.JOB_SEEKER);
 
                 when(authService.registerUser(any(UserRegistrationRequest.class)))
-                                .thenThrow(new RuntimeException("Email already exists"));
+                        .thenThrow(new RuntimeException("Email already exists"));
 
                 mockMvc.perform(post("/api/auth/register")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(regDto)))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(content().string("Email already exists"));
+                        .andExpect(status().isBadRequest())
+                        .andExpect(content().string("Email already exists"));
         }
 
         @Test
@@ -205,10 +211,10 @@ public class AuthControllerTest {
                 mockMvc.perform(post("/api/auth/refresh")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.token").value("new-jwt-token"))
-                                .andExpect(jsonPath("$.refreshToken").value("dummy-refresh-token"))
-                                .andExpect(jsonPath("$.email").value("test@test.com"));
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.token").value("new-jwt-token"))
+                        .andExpect(jsonPath("$.refreshToken").value("dummy-refresh-token"))
+                        .andExpect(jsonPath("$.email").value("test@test.com"));
         }
 
         @Test
@@ -221,31 +227,31 @@ public class AuthControllerTest {
                 mockMvc.perform(post("/api/auth/refresh")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isForbidden())
-                                .andExpect(content().string("Refresh token is not in database!"));
+                        .andExpect(status().isForbidden())
+                        .andExpect(content().string("Refresh token is not in database!"));
         }
 
         @Test
         void testLogoutUser() throws Exception {
                 UserDetailsImpl userDetails = new UserDetailsImpl(
-                                1L,
-                                "test@example.com",
-                                "test@example.com",
-                                "+1987654321",
-                                "password",
-                                User.Role.JOB_SEEKER,
-                                Collections.emptyList());
+                        1L,
+                        "test@example.com",
+                        "test@example.com",
+                        "+1987654321",
+                        "password",
+                        User.Role.JOB_SEEKER,
+                        Collections.emptyList());
 
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
-                                userDetails.getAuthorities());
+                        userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
                 when(refreshTokenService.deleteByUserId(1L)).thenReturn(1);
 
                 mockMvc.perform(post("/api/auth/logout")
                                 .principal(authentication))
-                                .andExpect(status().isOk())
-                                .andExpect(content().string("Log out successful"));
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("Log out successful"));
         }
 
         @Test
@@ -258,9 +264,9 @@ public class AuthControllerTest {
                 mockMvc.perform(post("/api/auth/forgot-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isOk())
-                                .andExpect(content().string(
-                                                "If an account exists with that email, a reset token has been generated."));
+                        .andExpect(status().isOk())
+                        .andExpect(content().string(
+                                "If an account exists with that email, a reset token has been generated."));
         }
 
         @Test
@@ -269,14 +275,14 @@ public class AuthControllerTest {
                 request.setEmail("test@test.com");
 
                 doThrow(new RuntimeException("User not found")).when(authService)
-                                .initiatePasswordReset("test@test.com");
+                        .initiatePasswordReset("test@test.com");
 
                 mockMvc.perform(post("/api/auth/forgot-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isOk())
-                                .andExpect(content().string(
-                                                "If an account exists with that email, a reset token has been generated."));
+                        .andExpect(status().isOk())
+                        .andExpect(content().string(
+                                "If an account exists with that email, a reset token has been generated."));
         }
 
         @Test
@@ -290,8 +296,8 @@ public class AuthControllerTest {
                 mockMvc.perform(post("/api/auth/reset-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isOk())
-                                .andExpect(content().string("Password reset successfully."));
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("Password reset successfully."));
         }
 
         @Test
@@ -301,13 +307,13 @@ public class AuthControllerTest {
                 request.setNewPassword("newPass");
 
                 doThrow(new RuntimeException("Invalid token")).when(authService).resetPassword("reset-token",
-                                "newPass");
+                        "newPass");
 
                 mockMvc.perform(post("/api/auth/reset-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(content().string("Invalid token"));
+                        .andExpect(status().isBadRequest())
+                        .andExpect(content().string("Invalid token"));
         }
 
         @Test
@@ -317,16 +323,16 @@ public class AuthControllerTest {
                 request.setNewPassword("newPass");
 
                 UserDetailsImpl userDetails = new UserDetailsImpl(
-                                1L,
-                                "test@example.com",
-                                "test@example.com",
-                                "+1987654321",
-                                "password",
-                                User.Role.JOB_SEEKER,
-                                Collections.emptyList());
+                        1L,
+                        "test@example.com",
+                        "test@example.com",
+                        "+1987654321",
+                        "password",
+                        User.Role.JOB_SEEKER,
+                        Collections.emptyList());
 
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
-                                userDetails.getAuthorities());
+                        userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
                 User mockUser = new User();
@@ -339,8 +345,8 @@ public class AuthControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                                 .principal(authentication)) // fallback
-                                .andExpect(status().isOk())
-                                .andExpect(content().string("Password updated successfully."));
+                        .andExpect(status().isOk())
+                        .andExpect(content().string("Password updated successfully."));
         }
 
         @Test
@@ -352,8 +358,8 @@ public class AuthControllerTest {
                 mockMvc.perform(post("/api/auth/update-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isUnauthorized())
-                                .andExpect(content().string("Unauthorized"));
+                        .andExpect(status().isUnauthorized())
+                        .andExpect(content().string("Unauthorized"));
         }
 
         @Test
@@ -363,16 +369,16 @@ public class AuthControllerTest {
                 request.setNewPassword("newPass");
 
                 UserDetailsImpl userDetails = new UserDetailsImpl(
-                                1L,
-                                "test@example.com",
-                                "test@example.com",
-                                "+1987654321",
-                                "password",
-                                User.Role.JOB_SEEKER,
-                                Collections.emptyList());
+                        1L,
+                        "test@example.com",
+                        "test@example.com",
+                        "+1987654321",
+                        "password",
+                        User.Role.JOB_SEEKER,
+                        Collections.emptyList());
 
                 Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
-                                userDetails.getAuthorities());
+                        userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
                 User mockUser = new User();
@@ -380,13 +386,47 @@ public class AuthControllerTest {
 
                 when(authService.getUserById(1L)).thenReturn(mockUser);
                 doThrow(new RuntimeException("Wrong old password")).when(authService).updatePassword(mockUser,
-                                "oldPass", "newPass");
+                        "oldPass", "newPass");
 
                 mockMvc.perform(post("/api/auth/update-password")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                                 .principal(authentication)) // fallback
-                                .andExpect(status().isBadRequest())
-                                .andExpect(content().string("Wrong old password"));
+                        .andExpect(status().isBadRequest())
+                        .andExpect(content().string("Wrong old password"));
+        }
+
+        @Test
+        void testUpdatePassword_SameAsOld_Failure() throws Exception {
+                UpdatePasswordRequest request = new UpdatePasswordRequest();
+                request.setOldPassword("samePass");
+                request.setNewPassword("samePass");
+
+                UserDetailsImpl userDetails = new UserDetailsImpl(
+                        1L,
+                        "test@example.com",
+                        "test@example.com",
+                        "+1987654321",
+                        "password",
+                        User.Role.JOB_SEEKER,
+                        Collections.emptyList());
+
+                Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+                        userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                User mockUser = new User();
+                mockUser.setId(1L);
+
+                when(authService.getUserById(1L)).thenReturn(mockUser);
+                doThrow(new RuntimeException("New password must be different from current password"))
+                        .when(authService).updatePassword(mockUser, "samePass", "samePass");
+
+                mockMvc.perform(post("/api/auth/update-password")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                                .principal(authentication))
+                        .andExpect(status().isBadRequest())
+                        .andExpect(content().string("New password must be different from current password"));
         }
 }

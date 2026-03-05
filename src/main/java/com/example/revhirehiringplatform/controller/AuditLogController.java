@@ -1,5 +1,6 @@
 package com.example.revhirehiringplatform.controller;
 
+import com.example.revhirehiringplatform.dto.response.AuditLogResponse;
 import com.example.revhirehiringplatform.model.AuditLog;
 import com.example.revhirehiringplatform.repository.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/audit-logs")

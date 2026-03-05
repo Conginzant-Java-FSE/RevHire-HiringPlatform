@@ -1,5 +1,5 @@
 package com.example.revhirehiringplatform.controller;
-
+import com.example.revhirehiringplatform.dto.response.AuditLogResponse;
 import com.example.revhirehiringplatform.model.AuditLog;
 import com.example.revhirehiringplatform.repository.AuditLogRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,25 +38,25 @@ public class AuditLogControllerTest {
     @Test
     void testGetAllLogs() {
         when(auditLogRepository.findAll()).thenReturn(Collections.singletonList(new AuditLog()));
-        ResponseEntity<List<AuditLog>> response = auditLogController.getAllLogs();
+        ResponseEntity<List<AuditLogResponse>> response = auditLogController.getAllLogs();
         assertEquals(200, response.getStatusCode().value());
     }
 
     @Test
     void testGetLogById() {
         when(auditLogRepository.findById(1L)).thenReturn(Optional.of(new AuditLog()));
-        ResponseEntity<AuditLog> response = auditLogController.getLogById(1L);
+        ResponseEntity<AuditLogResponse> response = auditLogController.getLogById(1L);
         assertEquals(200, response.getStatusCode().value());
 
         when(auditLogRepository.findById(2L)).thenReturn(Optional.empty());
-        ResponseEntity<AuditLog> notFound = auditLogController.getLogById(2L);
+        ResponseEntity<AuditLogResponse> notFound = auditLogController.getLogById(2L);
         assertEquals(404, notFound.getStatusCode().value());
     }
 
     @Test
     void testGetLogsByEntityType() {
         when(auditLogRepository.findByEntityType("JobPost")).thenReturn(Collections.singletonList(new AuditLog()));
-        ResponseEntity<List<AuditLog>> response = auditLogController.getLogsByEntityType("JobPost");
+        ResponseEntity<List<AuditLogResponse>> response = auditLogController.getLogsByEntityType("JobPost");
         assertEquals(200, response.getStatusCode().value());
     }
 
@@ -64,7 +64,7 @@ public class AuditLogControllerTest {
     void testGetLogsByEntity() {
         when(auditLogRepository.findByEntityTypeAndEntityIdOrderByChangedAtDesc("JobPost", 1L))
                 .thenReturn(Collections.singletonList(new AuditLog()));
-        ResponseEntity<List<AuditLog>> response = auditLogController.getLogsByEntity("JobPost", 1L);
+        ResponseEntity<List<AuditLogResponse>> response = auditLogController.getLogsByEntity("JobPost", 1L);
         assertEquals(200, response.getStatusCode().value());
     }
 
@@ -72,7 +72,7 @@ public class AuditLogControllerTest {
     void testGetLogsByUser() {
         when(auditLogRepository.findByChangedBy_IdOrderByChangedAtDesc(1L))
                 .thenReturn(Collections.singletonList(new AuditLog()));
-        ResponseEntity<List<AuditLog>> response = auditLogController.getLogsByUser(1L);
+        ResponseEntity<List<AuditLogResponse>> response = auditLogController.getLogsByUser(1L);
         assertEquals(200, response.getStatusCode().value());
     }
 

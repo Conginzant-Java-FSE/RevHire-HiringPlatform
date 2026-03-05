@@ -4,12 +4,11 @@ import com.example.revhirehiringplatform.dto.request.UserRegistrationRequest;
 import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j

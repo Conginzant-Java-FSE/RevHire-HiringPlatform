@@ -1,6 +1,7 @@
 package com.example.revhirehiringplatform.controller;
 
 
+import com.example.revhirehiringplatform.dto.response.JobPostResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.revhirehiringplatform.dto.request.CompanyRequest;
 import com.example.revhirehiringplatform.dto.response.CompanyResponse;
@@ -10,6 +11,7 @@ import com.example.revhirehiringplatform.model.Application;
 import com.example.revhirehiringplatform.repository.UserRepository;
 import com.example.revhirehiringplatform.security.UserDetailsImpl;
 import com.example.revhirehiringplatform.service.CompanyService;
+import com.example.revhirehiringplatform.service.JobService;
 import com.example.revhirehiringplatform.repository.JobPostRepository;
 import com.example.revhirehiringplatform.repository.ApplicationRepository;
 import com.example.revhirehiringplatform.repository.EmployerProfileRepository;
@@ -56,6 +58,9 @@ public class CompanyControllerTest {
 
     @Mock
     private EmployerProfileRepository employerProfileRepository;
+
+    @Mock
+    private JobService jobService;
 
     @InjectMocks
     private CompanyController companyController;
@@ -115,7 +120,6 @@ public class CompanyControllerTest {
 
     @Test
     void testUpdateProfile_Unauthorized() throws Exception {
-
         User seeker = new User();
         seeker.setId(2L);
         seeker.setRole(User.Role.JOB_SEEKER);
@@ -213,7 +217,7 @@ public class CompanyControllerTest {
         when(jobPostRepository.findByCreatedBy(employer)).thenReturn(List.of(activeJob, closedJob));
 
         Application app = new Application();
-        app.setStatus(Application.ApplicationStatus.UNDER_REVIEW);
+        app.setStatus(Application.ApplicationStatus.REVIEWING);
         when(applicationRepository.findByJobPostCreatedBy(employer)).thenReturn(List.of(app));
 
         mockMvc.perform(get("/api/company/register/dashboard")
@@ -262,6 +266,9 @@ public class CompanyControllerTest {
         JobPost mockJob = new JobPost();
         mockJob.setId(101L);
         when(jobPostRepository.findByCompanyId(10L)).thenReturn(List.of(mockJob));
+        JobPostResponse mockJobRes = new JobPostResponse();
+        mockJobRes.setId(101L);
+        when(jobService.mapToDto(any(JobPost.class))).thenReturn(mockJobRes);
 
         mockMvc.perform(get("/api/company/register/10/jobs"))
                 .andExpect(status().isOk())

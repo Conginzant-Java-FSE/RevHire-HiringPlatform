@@ -59,11 +59,11 @@ public class UserServiceTest {
 
     @Test
     void testDeleteUser() {
-        doNothing().when(userRepository).deleteById(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         userService.deleteUser(1L);
 
-        verify(userRepository, times(1)).deleteById(1L);
+        verify(userRepository, times(1)).delete(any(User.class));
     }
 
     @Test

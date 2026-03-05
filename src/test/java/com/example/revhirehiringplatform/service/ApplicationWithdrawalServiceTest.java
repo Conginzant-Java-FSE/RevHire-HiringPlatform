@@ -32,6 +32,9 @@ public class ApplicationWithdrawalServiceTest {
     @Mock
     private ApplicationStatusHistoryRepository statusHistoryRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private ApplicationWithdrawalService applicationWithdrawalService;
 

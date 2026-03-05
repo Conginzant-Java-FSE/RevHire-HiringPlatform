@@ -1,8 +1,8 @@
 package com.example.revhirehiringplatform.controller;
-import com.revhire.dto.request.JobSeekerProfileRequest;
-import com.revhire.dto.request.ResumeTextRequest;
+import com.example.revhirehiringplatform.dto.request.JobSeekerProfileRequest;
+import com.example.revhirehiringplatform.dto.request.ResumeTextRequest;
 import com.example.revhirehiringplatform.dto.response.ApplicationResponse;
-import com.revhire.dto.response.JobSeekerProfileResponse;
+import com.example.revhirehiringplatform.dto.response.JobSeekerProfileResponse;
 import com.example.revhirehiringplatform.dto.response.SkillResponse;
 import com.example.revhirehiringplatform.model.JobSeekerProfile;
 import com.example.revhirehiringplatform.model.ResumeText;
