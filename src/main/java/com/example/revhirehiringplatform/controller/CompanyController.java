@@ -5,11 +5,13 @@ import com.example.revhirehiringplatform.dto.response.CompanyResponse;
 import com.example.revhirehiringplatform.model.JobPost;
 import com.example.revhirehiringplatform.model.Application;
 import com.example.revhirehiringplatform.model.User;
+import com.example.revhirehiringplatform.repository.EmployerProfileRepository;
 import com.example.revhirehiringplatform.security.UserDetailsImpl;
 import com.example.revhirehiringplatform.repository.UserRepository;
 import com.example.revhirehiringplatform.repository.JobPostRepository;
 import com.example.revhirehiringplatform.repository.ApplicationRepository;
 import com.example.revhirehiringplatform.service.CompanyService;
+import com.example.revhirehiringplatform.service.JobService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ public class CompanyController {
     private final JobPostRepository jobPostRepository;
     private final ApplicationRepository applicationRepository;
     private final EmployerProfileRepository employerProfileRepository;
+    private final JobService jobService;
 
     private User getUserFromContext(UserDetailsImpl userDetails) {
         if (userDetails == null)
@@ -106,7 +109,7 @@ public class CompanyController {
         List<Application> employerApplications = applicationRepository.findByJobPostCreatedBy(user);
         long totalApplications = employerApplications.size();
         long pendingReviews = employerApplications.stream()
-                .filter(a -> a.getStatus() == Application.ApplicationStatus.UNDER_REVIEW
+                .filter(a -> a.getStatus() == Application.ApplicationStatus.REVIEWING
                         || a.getStatus() == Application.ApplicationStatus.APPLIED)
                 .count();
 
@@ -152,7 +155,9 @@ public class CompanyController {
 
     @GetMapping("/{id}/jobs")
     public ResponseEntity<?> getCompanyJobs(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(jobPostRepository.findByCompanyId(id));
+        return ResponseEntity.ok(jobPostRepository.findByCompanyId(id).stream()
+                .map(jobService::mapToDto)
+                .toList());
     }
 
     @GetMapping("/{id}/employees")

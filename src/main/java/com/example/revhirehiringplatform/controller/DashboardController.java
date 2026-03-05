@@ -7,7 +7,9 @@ import com.example.revhirehiringplatform.repository.ApplicationRepository;
 import com.example.revhirehiringplatform.repository.UserRepository;
 import com.example.revhirehiringplatform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,7 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor
+@Slf4j
 public class DashboardController {
 
     private final JobPostRepository jobPostRepository;
@@ -24,12 +27,41 @@ public class DashboardController {
     private final UserRepository userRepository;
 
     @GetMapping("/admin/metrics")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getAdminMetrics() {
-        Map<String, Object> metrics = new HashMap<>();
-        metrics.put("totalUsers", userRepository.count());
-        metrics.put("totalJobs", jobPostRepository.count());
-        metrics.put("totalApplications", applicationRepository.count());
-        return ResponseEntity.ok(metrics);
+        try {
+            log.info("Fetching admin metrics...");
+            Map<String, Object> metrics = new HashMap<>();
+
+
+            metrics.put("totalUsers", userRepository.count());
+            metrics.put("seekers", userRepository.countByRole(com.revhire.model.User.Role.JOB_SEEKER));
+            metrics.put("employers", userRepository.countByRole(com.revhire.model.User.Role.EMPLOYER));
+            metrics.put("activeUsers", userRepository.countByStatus(true));
+            metrics.put("inactiveUsers", userRepository.countByStatus(false));
+
+
+            metrics.put("totalJobs", jobPostRepository.count());
+            metrics.put("activeJobs", jobPostRepository.countByStatus(com.revhire.model.JobPost.JobStatus.ACTIVE));
+            metrics.put("closedJobs", jobPostRepository.countByStatus(com.revhire.model.JobPost.JobStatus.CLOSED));
+
+
+            metrics.put("totalApplications", applicationRepository.count());
+            metrics.put("applied",
+                    applicationRepository.countByStatus(com.revhire.model.Application.ApplicationStatus.APPLIED));
+            metrics.put("shortlisted",
+                    applicationRepository.countByStatus(com.revhire.model.Application.ApplicationStatus.SHORTLISTED));
+            metrics.put("selected",
+                    applicationRepository.countByStatus(com.revhire.model.Application.ApplicationStatus.SELECTED));
+            metrics.put("rejected",
+                    applicationRepository.countByStatus(com.revhire.model.Application.ApplicationStatus.REJECTED));
+
+            log.info("Admin metrics fetched successfully: {}", metrics);
+            return ResponseEntity.ok(metrics);
+        } catch (Exception e) {
+            log.error("Error fetching admin metrics: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/employer/metrics")

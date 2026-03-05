@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-
 @Data
 public class UserRegistrationRequest {
     @NotBlank(message = "Name is required")
@@ -23,5 +22,6 @@ public class UserRegistrationRequest {
 
     private String phone;
     private String location;
-    private String employmentStatus; // FRESHER, EMPLOYED, UNEMPLOYED
+    private String employmentStatus;
+    private String companyName;
 }

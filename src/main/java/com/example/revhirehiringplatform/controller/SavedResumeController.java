@@ -1,10 +1,10 @@
-package com.revhire.controller;
+package com.example.revhirehiringplatform.controller;
 
 import com.revhire.dto.response.JobSeekerProfileResponse;
-import com.revhire.model.User;
-import com.revhire.security.UserDetailsImpl;
-import com.revhire.repository.UserRepository;
-import com.revhire.service.SavedResumeService;
+import com.example.revhirehiringplatform.model.User;
+import com.example.revhirehiringplatform.security.UserDetailsImpl;
+import com.example.revhirehiringplatform.repository.UserRepository;
+import com.example.revhirehiringplatform.service.SavedResumeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +22,7 @@ public class SavedResumeController {
 
     private final SavedResumeService savedResumeService;
     private final UserRepository userRepository;
+    private final com.example.revhirehiringplatform.repository.SavedResumeRepository savedResumeRepository;
 
     private User getUserFromContext(UserDetailsImpl userDetails) {
         if (userDetails == null)
@@ -32,31 +33,35 @@ public class SavedResumeController {
 
     @PostMapping("/{seekerId}")
     public ResponseEntity<?> saveResume(@PathVariable("seekerId") Long seekerId,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                        @RequestParam("jobId") Long jobId,
+                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
-            return ResponseEntity.status(403).body("Unauthorized: Only employers can save resumes.");
+            return ResponseEntity.status(403)
+                    .body(java.util.Map.of("message", "Unauthorized: Only employers can save resumes."));
         }
         try {
-            savedResumeService.saveResume(seekerId, user);
-            return ResponseEntity.ok("Resume saved successfully");
+            savedResumeService.saveResume(seekerId, jobId, user);
+            return ResponseEntity.ok(java.util.Map.of("message", "Resume saved successfully"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
     @DeleteMapping("/{seekerId}")
     public ResponseEntity<?> unsaveResume(@PathVariable("seekerId") Long seekerId,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                          @RequestParam("jobId") Long jobId,
+                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
-            return ResponseEntity.status(403).body("Unauthorized: Only employers can manage saved resumes.");
+            return ResponseEntity.status(403)
+                    .body(java.util.Map.of("message", "Unauthorized: Only employers can manage saved resumes."));
         }
         try {
-            savedResumeService.unsaveResume(seekerId, user);
-            return ResponseEntity.ok("Resume unsaved successfully");
+            savedResumeService.unsaveResume(seekerId, jobId, user);
+            return ResponseEntity.ok(java.util.Map.of("message", "Resume unsaved successfully"));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
         }
     }
 
@@ -64,7 +69,8 @@ public class SavedResumeController {
     public ResponseEntity<?> getSavedResumes(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
-            return ResponseEntity.status(403).body("Unauthorized: Only employers can view saved resumes.");
+            return ResponseEntity.status(403)
+                    .body(java.util.Map.of("message", "Unauthorized: Only employers can view saved resumes."));
         }
         List<JobSeekerProfileResponse> savedResumes = savedResumeService.getSavedResumes(user);
         return ResponseEntity.ok(savedResumes);
@@ -72,20 +78,22 @@ public class SavedResumeController {
 
     @GetMapping("/{seekerId}/check")
     public ResponseEntity<?> isResumeSaved(@PathVariable("seekerId") Long seekerId,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                           @RequestParam("jobId") Long jobId,
+                                           @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
-            return ResponseEntity.status(403).body("Unauthorized");
+            return ResponseEntity.status(403).body(java.util.Map.of("message", "Unauthorized"));
         }
-        return ResponseEntity.ok(false);
+        boolean exists = savedResumeRepository.existsByEmployerIdAndJobSeekerIdAndJobPostId(user.getId(), seekerId, jobId);
+        return ResponseEntity.ok(exists);
     }
 
     @DeleteMapping("/clear")
     public ResponseEntity<?> clearSavedResumes(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
-            return ResponseEntity.status(403).body("Unauthorized");
+            return ResponseEntity.status(403).body(java.util.Map.of("message", "Unauthorized"));
         }
-        return ResponseEntity.ok("Cleared");
+        return ResponseEntity.ok(java.util.Map.of("message", "Cleared"));
     }
 }

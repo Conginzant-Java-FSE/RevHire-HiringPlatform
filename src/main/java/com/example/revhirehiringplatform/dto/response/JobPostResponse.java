@@ -20,4 +20,5 @@ public class JobPostResponse {
     private String education;
     private Integer openings;
     private String status;
+    private Long applicantCount;
 }

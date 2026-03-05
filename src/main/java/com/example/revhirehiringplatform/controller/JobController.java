@@ -58,7 +58,7 @@ public class JobController {
             @RequestParam(required = false, name = "experience") Integer experience,
             @RequestParam(required = false, name = "company") String company,
             @RequestParam(required = false, name = "salary") Double salary,
-            @RequestParam(required = false, name = "jobType") String jobType,
+            @RequestParam(required = false, name = "jobType") List<String> jobType,
             @RequestParam(required = false, name = "daysAgo") Integer daysAgo) {
 
         return ResponseEntity
@@ -66,8 +66,12 @@ public class JobController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<JobPostResponse> getJobById(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(jobService.mapToDto(jobService.getJobById(id)));
+    public ResponseEntity<?> getJobById(@PathVariable("id") Long id) {
+        try {
+            return ResponseEntity.ok(jobService.mapToDto(jobService.getJobById(id)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/my-jobs")
@@ -96,6 +100,7 @@ public class JobController {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can edit jobs");
         }
         try {
+
             JobPostResponse updatedJob = jobService.updateJob(id, jobDto, user);
             return ResponseEntity.ok(updatedJob);
         } catch (RuntimeException e) {
@@ -112,6 +117,7 @@ public class JobController {
             return ResponseEntity.status(403).body("Unauthorized: Only Employers can update job status");
         }
         try {
+
             JobPostResponse updatedJob = jobService.updateJobStatus(id, status, user);
             return ResponseEntity.ok(updatedJob);
         } catch (RuntimeException e) {
@@ -159,4 +165,3 @@ public class JobController {
         }
     }
 }
-

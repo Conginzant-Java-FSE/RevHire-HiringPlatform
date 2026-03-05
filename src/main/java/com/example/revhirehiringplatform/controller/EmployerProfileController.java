@@ -1,6 +1,7 @@
 package com.example.revhirehiringplatform.controller;
 
 import com.example.revhirehiringplatform.model.EmployerProfile;
+import com.example.revhirehiringplatform.repository.EmployerProfileRepository;
 import com.example.revhirehiringplatform.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -63,4 +64,3 @@ public class EmployerProfileController {
                 .orElse(ResponseEntity.notFound().build());
     }
 }
-

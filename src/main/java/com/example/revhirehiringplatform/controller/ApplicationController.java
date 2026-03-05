@@ -51,6 +51,22 @@ public class ApplicationController {
         }
     }
 
+    @GetMapping("/check/{jobId}")
+    public ResponseEntity<Boolean> hasApplied(@PathVariable("jobId") Long jobId,
+                                              @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
+            return ResponseEntity.ok(false);
+        }
+        try {
+            List<ApplicationResponse> apps = applicationService.getMyApplications(user);
+            boolean applied = apps.stream().anyMatch(a -> a.getJobId().equals(jobId));
+            return ResponseEntity.ok(applied);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
+        }
+    }
+
     @GetMapping("/my-applications")
     public ResponseEntity<?> getMyApplications(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
@@ -59,6 +75,20 @@ public class ApplicationController {
         }
         try {
             List<ApplicationResponse> applications = applicationService.getMyApplications(user);
+            return ResponseEntity.ok(applications);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/all-for-employer")
+    public ResponseEntity<?> getApplicationsForEmployer(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.EMPLOYER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            List<ApplicationResponse> applications = applicationService.getApplicationsForEmployer(user);
             return ResponseEntity.ok(applications);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

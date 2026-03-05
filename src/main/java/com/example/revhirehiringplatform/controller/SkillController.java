@@ -63,7 +63,7 @@ public class SkillController {
 
     @GetMapping("/popular")
     public ResponseEntity<List<SkillResponse>> getPopularSkills() {
-        // Mocking popular skills for now
+
         return ResponseEntity.ok(skillsMasterRepository.findAll().stream()
                 .limit(10)
                 .map(this::mapToDto)

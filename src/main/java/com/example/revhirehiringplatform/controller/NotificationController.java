@@ -84,8 +84,12 @@ public class NotificationController {
         if (user == null) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
-
-        return ResponseEntity.ok("Notification deleted");
+        try {
+            notificationService.deleteNotification(id, user);
+            return ResponseEntity.ok("Notification deleted");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/all")
@@ -94,6 +98,7 @@ public class NotificationController {
         if (user == null) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
+        notificationService.deleteAllNotifications(user);
         return ResponseEntity.ok("All notifications deleted");
     }
 

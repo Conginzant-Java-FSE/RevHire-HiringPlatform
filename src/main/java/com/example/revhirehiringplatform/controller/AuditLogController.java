@@ -24,42 +24,69 @@ public class AuditLogController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AuditLog>> getAllLogs() {
+    public ResponseEntity<List<AuditLogResponse>> getAllLogs() {
         log.info("ENTERING AuditLogController.getAllLogs()");
-        List<AuditLog> logs = auditLogRepository.findAll();
+        List<AuditLogResponse> logs = auditLogRepository.findAll().stream()
+                .map(this::mapToDto)
+                .collect(java.util.stream.Collectors.toList());
         log.info("Found {} audit logs", logs.size());
         return ResponseEntity.ok(logs);
     }
 
+    private AuditLogResponse mapToDto(AuditLog log) {
+        AuditLogResponse dto = new AuditLogResponse();
+        dto.setId(log.getId());
+        dto.setEntityType(log.getEntityType());
+        dto.setEntityId(log.getEntityId());
+        dto.setAction(log.getAction());
+        dto.setOldValue(log.getOldValue());
+        dto.setNewValue(log.getNewValue());
+        dto.setChangedAt(log.getChangedAt());
+        if (log.getChangedBy() != null) {
+            dto.setChangedByName(log.getChangedBy().getName());
+        } else {
+            dto.setChangedByName("System");
+        }
+        dto.setDetails(log.getAction() + " on " + log.getEntityType() + " #" + log.getEntityId());
+        return dto;
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<AuditLog> getLogById(@PathVariable Long id) {
+    public ResponseEntity<AuditLogResponse> getLogById(@PathVariable Long id) {
         log.info("Request received to fetch audit log by ID: {}", id);
         return auditLogRepository.findById(id)
+                .map(this::mapToDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/entity/{entityType}")
-    public ResponseEntity<List<AuditLog>> getLogsByEntityType(@PathVariable String entityType) {
+    public ResponseEntity<List<AuditLogResponse>> getLogsByEntityType(@PathVariable String entityType) {
         log.info("Request received to fetch audit logs by entity type: {}", entityType);
-        return ResponseEntity.ok(auditLogRepository.findByEntityType(entityType));
+        return ResponseEntity.ok(auditLogRepository.findByEntityType(entityType).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList()));
     }
 
     @GetMapping("/entity/{entityType}/{entityId}")
-    public ResponseEntity<List<AuditLog>> getLogsByEntity(@PathVariable String entityType,
-            @PathVariable Long entityId) {
+    public ResponseEntity<List<AuditLogResponse>> getLogsByEntity(@PathVariable String entityType,
+                                                                  @PathVariable Long entityId) {
         return ResponseEntity
-                .ok(auditLogRepository.findByEntityTypeAndEntityIdOrderByChangedAtDesc(entityType, entityId));
+                .ok(auditLogRepository.findByEntityTypeAndEntityIdOrderByChangedAtDesc(entityType, entityId).stream()
+                        .map(this::mapToDto)
+                        .collect(Collectors.toList()));
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<AuditLog>> getLogsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(auditLogRepository.findByChangedBy_IdOrderByChangedAtDesc(userId));
+    public ResponseEntity<List<AuditLogResponse>> getLogsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(auditLogRepository.findByChangedBy_IdOrderByChangedAtDesc(userId).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList()));
     }
 
     @DeleteMapping("/cleanup")
     public ResponseEntity<Void> cleanupLogs(@RequestParam(required = false) Integer daysAgo) {
-        // Implementation for cleanup logic
+
         return ResponseEntity.ok().build();
     }
 }
