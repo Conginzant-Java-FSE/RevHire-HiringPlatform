@@ -45,6 +45,25 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/send-otp")
+    public ResponseEntity<?> sendOtp(@RequestParam String email) {
+        try {
+            authService.generateAndSendOtp(email);
+            return ResponseEntity.ok("OTP sent to " + email);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+        if (authService.verifyOtp(email, otp)) {
+            return ResponseEntity.ok("OTP verified successfully");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid or expired OTP");
+        }
+    }
+
     @GetMapping("/login")
     public ResponseEntity<?> getLoginInfo() {
         return ResponseEntity.ok("To login, please send a POST request with email and password.");
@@ -57,15 +76,20 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = jwtUtil.generateJwtToken(authentication);
-
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+
+            if (User.Role.ADMIN.equals(userDetails.getRole())) {
+                return ResponseEntity.status(403).body("Administrators must use the admin login portal.");
+            }
+
+            String jwt = jwtUtil.generateJwtToken(authentication);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
 
             return ResponseEntity.ok(AuthResponse.builder()
                     .token(jwt)
                     .refreshToken(refreshToken.getToken())
-                    .name(userDetails.getUsername())
+                    .name(authService.getUserById(userDetails.getId()).getName())
                     .email(userDetails.getEmail())
                     .phone(userDetails.getPhone())
                     .role(userDetails.getRole())
@@ -74,6 +98,40 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Authentication failed: {}", e.getMessage());
             return ResponseEntity.status(401).body("Invalid email or password");
+        }
+    }
+
+    @PostMapping("/admin/login")
+    public ResponseEntity<?> authenticateAdmin(@Valid @RequestBody UserLoginRequest loginDto) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword()));
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+
+            if (!User.Role.ADMIN.equals(userDetails.getRole())) {
+                return ResponseEntity.status(403).body("This login is for administrators only.");
+            }
+
+            String jwt = jwtUtil.generateJwtToken(authentication);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+
+            log.info("Admin login successful for user: {}", userDetails.getEmail());
+
+            return ResponseEntity.ok(AuthResponse.builder()
+                    .token(jwt)
+                    .refreshToken(refreshToken.getToken())
+                    .name(authService.getUserById(userDetails.getId()).getName())
+                    .email(userDetails.getEmail())
+                    .phone(userDetails.getPhone())
+                    .role(userDetails.getRole())
+                    .id(userDetails.getId())
+                    .build());
+        } catch (Exception e) {
+            log.error("Admin authentication failed: {}", e.getMessage());
+            return ResponseEntity.status(401).body("Invalid admin email or password");
         }
     }
 
@@ -117,7 +175,7 @@ public class AuthController {
             authService.initiatePasswordReset(request.getEmail());
             return ResponseEntity.ok("If an account exists with that email, a reset token has been generated.");
         } catch (Exception e) {
-            // We return OK even if not found for security reasons (don't leak emails)
+
             return ResponseEntity.ok("If an account exists with that email, a reset token has been generated.");
         }
     }
@@ -134,7 +192,7 @@ public class AuthController {
 
     @PostMapping("/update-password")
     public ResponseEntity<?> updatePassword(@Valid @RequestBody UpdatePasswordRequest request,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(401).body("Unauthorized");
         }

@@ -16,7 +16,9 @@ public class JobPostRequest {
 
     private String requirements;
     private String location;
+
     private String salary;
+
     private String jobType;
 
     @NotNull(message = "Deadline is required")
@@ -27,4 +29,5 @@ public class JobPostRequest {
     private Long companyId;
     private String education;
     private Integer openings;
+    private String status;
 }

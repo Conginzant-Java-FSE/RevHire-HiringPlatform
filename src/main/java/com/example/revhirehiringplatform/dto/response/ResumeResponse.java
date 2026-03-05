@@ -1,4 +1,4 @@
-package com.revhire.dto.response;
+package com.example.revhirehiringplatform.dto.response;
 
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -8,7 +8,7 @@ public class ResumeResponse {
     private Long id;
     private String fileType;
     private String fileName;
-    private byte[] content; // For file-based resumes
+    private byte[] content;
     private String objective;
     private String education;
     private String experience;
