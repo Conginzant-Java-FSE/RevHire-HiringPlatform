@@ -38,23 +38,29 @@ public class JobService {
     private final SkillsMasterRepository skillsMasterRepository;
     private final JobSkillMapRepository jobSkillMapRepository;
     private final ApplicationRepository applicationRepository;
+    private final SavedJobsRepository savedJobsRepository;
+    private final ApplicationStatusHistoryRepository applicationStatusHistoryRepository;
+    private final ApplicationNotesRepository applicationNotesRepository;
 
     @Transactional
     public JobPostResponse createJob(JobPostRequest jobPostDto, User user) {
         log.info("Creating job: {} for user: {}", jobPostDto.getTitle(), user.getEmail());
 
-        if (jobPostDto.getCompanyId() == null) {
-            throw new IllegalArgumentException("Company ID is required to post a job");
-        }
+        EmployerProfile profile = employerProfileRepository.findByUserId(user.getId())
+                .orElse(null);
 
-        Company company = companyRepository.findById(jobPostDto.getCompanyId())
-                .orElseThrow(() -> new IllegalArgumentException("Company not found"));
-
-        if (company.getCreatedBy() != null && !company.getCreatedBy().getId().equals(user.getId())) {
-            Optional<EmployerProfile> profileOpt = employerProfileRepository.findByUserId(user.getId());
-            if (profileOpt.isEmpty() || !profileOpt.get().getCompany().getId().equals(company.getId())) {
+        Company company;
+        if (profile != null && profile.getCompany() != null) {
+            company = profile.getCompany();
+        } else if (jobPostDto.getCompanyId() != null) {
+            company = companyRepository.findById(jobPostDto.getCompanyId())
+                    .orElseThrow(() -> new IllegalArgumentException("Company not found"));
+            if (company.getCreatedBy() != null && !company.getCreatedBy().getId().equals(user.getId())) {
                 throw new IllegalStateException("Unauthorized to post for this company");
             }
+        } else {
+            throw new IllegalArgumentException(
+                    "No company linked to your profile. Please complete your employer profile first.");
         }
 
         JobPost jobPost = new JobPost();
@@ -67,7 +73,7 @@ public class JobService {
         jobPost.setDeadline(jobPostDto.getDeadline() != null ? jobPostDto.getDeadline() : LocalDate.now().plusDays(30));
         jobPost.setExperienceYears(jobPostDto.getExperienceYears());
         jobPost.setEducation(jobPostDto.getEducation());
-        jobPost.setOpenings(jobPostDto.getOpenings());
+        jobPost.setOpenings(jobPostDto.getOpenings() != null ? jobPostDto.getOpenings() : 1);
         jobPost.setCompany(company);
         jobPost.setCreatedBy(user);
         jobPost.setStatus(JobPost.JobStatus.ACTIVE);
@@ -170,6 +176,12 @@ public class JobService {
             job.setEducation(jobDto.getEducation());
         if (jobDto.getOpenings() != null)
             job.setOpenings(jobDto.getOpenings());
+        if (jobDto.getStatus() != null) {
+            try {
+                job.setStatus(JobPost.JobStatus.valueOf(jobDto.getStatus()));
+            } catch (IllegalArgumentException e) {
+            }
+        }
 
         JobPost updatedJob = jobPostRepository.save(job);
 
@@ -238,6 +250,24 @@ public class JobService {
             throw new IllegalStateException("Unauthorized: You can only delete jobs you posted.");
         }
 
+        List<com.example.revhirehiringplatform.model.JobSkillMap> skills = jobSkillMapRepository.findByJobPostId(id);
+        jobSkillMapRepository.deleteAll(skills);
+
+        List<com.example.revhirehiringplatform.model.SavedJobs> savedJobs = savedJobsRepository.findByJobPostId(id);
+        savedJobsRepository.deleteAll(savedJobs);
+
+        List<com.example.revhirehiringplatform.model.Application> applications = applicationRepository.findByJobPostId(id);
+        for (com.example.revhirehiringplatform.model.Application app : applications) {
+            List<com.example.revhirehiringplatform.model.ApplicationStatusHistory> histories = applicationStatusHistoryRepository
+                    .findByApplicationIdOrderByChangedAtDesc(app.getId());
+            applicationStatusHistoryRepository.deleteAll(histories);
+
+            List<com.example.revhirehiringplatform.model.ApplicationNotes> notes = applicationNotesRepository
+                    .findByApplicationId(app.getId());
+            applicationNotesRepository.deleteAll(notes);
+        }
+        applicationRepository.deleteAll(applications);
+
         auditLogService.logAction(
                 JOB_POST_STR,
                 job.getId(),
@@ -256,6 +286,7 @@ public class JobService {
         if (!job.getCreatedBy().getId().equals(user.getId())) {
             throw new IllegalStateException("Unauthorized to view applications for this job");
         }
+
         return applicationRepository.findByJobPostId(id).stream()
                 .map(this::mapApplicationToDto)
                 .toList();
@@ -311,6 +342,7 @@ public class JobService {
         dto.setPostedDate(jobPost.getCreatedAt() != null ? jobPost.getCreatedAt().toLocalDate() : LocalDate.now());
         dto.setCompanyId(jobPost.getCompany().getId());
         dto.setCompanyName(jobPost.getCompany().getName());
+        dto.setApplicantCount(applicationRepository.countByJobPostId(jobPost.getId()));
         return dto;
     }
 }

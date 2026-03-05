@@ -22,6 +22,9 @@ public class ResumeText {
     @JoinColumn(name = "seeker_id", referencedColumnName = "id", nullable = false, unique = true)
     private JobSeekerProfile jobSeeker;
 
+    @Column(name = "title")
+    private String title;
+
     @Column(columnDefinition = "TEXT")
     private String objective;
 

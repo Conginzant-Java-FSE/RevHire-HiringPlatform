@@ -1,5 +1,6 @@
 package com.example.revhirehiringplatform.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,6 +23,30 @@ public class JobSeekerProfile {
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<Application> applications;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<SavedJobs> savedJobs;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<SeekerSkillMap> skills;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<ResumeFiles> resumes;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "jobSeeker", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<SavedResume> savedByEmployers;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "jobSeeker", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private ResumeText resumeText;
 
     private String location;
 

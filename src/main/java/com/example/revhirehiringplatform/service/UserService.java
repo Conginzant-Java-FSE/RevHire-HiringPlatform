@@ -36,9 +36,8 @@ public class UserService {
     public UserResponse updateUserStatus(Long id, boolean enabled) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
-
-        userRepository.save(user);
-        return mapToDto(user);
+        user.setStatus(enabled);
+        return mapToDto(userRepository.save(user));
     }
 
     @Transactional
@@ -51,7 +50,9 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
+        userRepository.delete(user);
     }
 
     public long getUserCount() {
@@ -65,6 +66,7 @@ public class UserService {
         dto.setEmail(user.getEmail());
         dto.setPhone(user.getPhone());
         dto.setRole(user.getRole());
+        dto.setStatus(user.getStatus());
         return dto;
     }
 }

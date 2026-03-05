@@ -35,7 +35,7 @@ public class JobSeekerResumeService {
     public ResumeFiles getResumeFile(Long profileId) {
         List<ResumeFiles> files = resumeFilesRepository.findByJobSeekerId(profileId);
         if (files != null && !files.isEmpty()) {
-            return files.get(0); // Return the first/latest active resume
+            return files.get(0);
         }
         return null;
     }

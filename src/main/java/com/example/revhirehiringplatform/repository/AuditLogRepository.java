@@ -13,4 +13,6 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     List<AuditLog> findByEntityTypeAndEntityIdOrderByChangedAtDesc(String entityType, Long entityId);
 
     List<AuditLog> findByEntityType(String entityType);
+
+    void deleteByChangedBy(com.example.revhirehiringplatform.model.User user);
 }

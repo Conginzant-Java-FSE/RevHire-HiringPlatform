@@ -2,6 +2,7 @@ package com.example.revhirehiringplatform.model;
 
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,6 +30,22 @@ public class JobPost {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "jobPost", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<Application> applications;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "jobPost", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<SavedJobs> savedJobs;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "jobPost", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<JobSkillMap> skills;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "jobPost", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private java.util.List<SavedResume> savedResumes;
 
     @Column(nullable = false)
     private String title;

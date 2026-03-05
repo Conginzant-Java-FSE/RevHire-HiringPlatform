@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "saved_resumes", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "employer_id", "job_seeker_id" })
+        @UniqueConstraint(columnNames = { "employer_id", "job_seeker_id", "job_post_id" })
 })
 @Data
 public class SavedResume {
@@ -24,6 +24,10 @@ public class SavedResume {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_seeker_id", nullable = false)
     private JobSeekerProfile jobSeeker;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_post_id", nullable = false)
+    private JobPost jobPost;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

@@ -12,4 +12,6 @@ public interface SavedJobsRepository extends JpaRepository<SavedJobs, Long> {
     List<SavedJobs> findByJobSeekerId(Long seekerId);
 
     Optional<SavedJobs> findByJobSeekerIdAndJobPostId(Long seekerId, Long jobPostId);
+
+    List<SavedJobs> findByJobPostId(Long jobPostId);
 }
