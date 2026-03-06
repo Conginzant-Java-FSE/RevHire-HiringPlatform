@@ -1,6 +1,6 @@
 package com.example.revhirehiringplatform.controller;
 
-import com.revhire.dto.response.JobSeekerProfileResponse;
+import com.example.revhirehiringplatform.dto.response.JobSeekerProfileResponse;
 import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.security.UserDetailsImpl;
 import com.example.revhirehiringplatform.repository.UserRepository;

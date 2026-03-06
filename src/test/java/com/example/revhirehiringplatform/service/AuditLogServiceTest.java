@@ -12,6 +12,7 @@ import org.mockito.MockitoAnnotations;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
+
 public class AuditLogServiceTest {
 
     @Mock
@@ -33,3 +34,4 @@ public class AuditLogServiceTest {
         verify(auditLogRepository).save(any(AuditLog.class));
     }
 }
+

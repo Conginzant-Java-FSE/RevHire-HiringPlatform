@@ -35,6 +35,8 @@ public class JobServiceTest {
     private JobSkillMapRepository jobSkillMapRepository;
     @Mock
     private ApplicationRepository applicationRepository;
+    @Mock
+    private SavedJobsRepository savedJobsRepository;
 
     @InjectMocks
     private JobService jobService;
@@ -124,6 +126,7 @@ public class JobServiceTest {
     @Test
     void testDeleteJob_Success() {
         when(jobPostRepository.findById(100L)).thenReturn(Optional.of(jobPost));
+        when(savedJobsRepository.findByJobPostId(100L)).thenReturn(java.util.Collections.emptyList());
 
         jobService.deleteJob(100L, employer);
 
@@ -242,5 +245,100 @@ public class JobServiceTest {
         when(jobPostRepository.findAll()).thenReturn(java.util.Collections.singletonList(jobPost));
         java.util.List<JobPostResponse> allJobs = jobService.getAllJobs();
         assertEquals(1, allJobs.size());
+    }
+
+    @Test
+    void testCreateJob_NoCompanyLinked() {
+        jobRequest.setCompanyId(null);
+        when(employerProfileRepository.findByUserId(1L)).thenReturn(Optional.empty());
+
+        Exception e = assertThrows(IllegalArgumentException.class, () -> jobService.createJob(jobRequest, employer));
+        assertEquals("No company linked to your profile. Please complete your employer profile first.", e.getMessage());
+    }
+
+    @Test
+    void testUpdateJob_ChangeStatus() {
+        jobRequest.setStatus("CLOSED");
+        when(jobPostRepository.findById(100L)).thenReturn(Optional.of(jobPost));
+        when(jobPostRepository.save(any(JobPost.class))).thenReturn(jobPost);
+
+        JobPostResponse response = jobService.updateJob(100L, jobRequest, employer);
+        assertNotNull(response);
+    }
+
+    @Test
+    void testUpdateJob_InvalidStatus() {
+        jobRequest.setStatus("INVALID_STATUS");
+        jobRequest.setExperienceYears(5);
+        jobRequest.setEducation("B.Tech");
+        jobRequest.setOpenings(3);
+        jobRequest.setDeadline(LocalDate.now());
+
+        when(jobPostRepository.findById(100L)).thenReturn(Optional.of(jobPost));
+        when(jobPostRepository.save(any(JobPost.class))).thenReturn(jobPost);
+
+        assertDoesNotThrow(() -> jobService.updateJob(100L, jobRequest, employer));
+    }
+
+    @Test
+    void testUpdateJobStatus_Unauthorized() {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        when(jobPostRepository.findById(100L)).thenReturn(Optional.of(jobPost));
+
+        assertThrows(IllegalStateException.class,
+                () -> jobService.updateJobStatus(100L, JobPost.JobStatus.CLOSED, otherUser));
+    }
+
+    @Test
+    void testDeleteJob_Unauthorized() {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        when(jobPostRepository.findById(100L)).thenReturn(Optional.of(jobPost));
+
+        assertThrows(IllegalStateException.class, () -> jobService.deleteJob(100L, otherUser));
+    }
+
+    @Test
+    void testGetJobApplications_Unauthorized() {
+        User otherUser = new User();
+        otherUser.setId(2L);
+        when(jobPostRepository.findById(100L)).thenReturn(Optional.of(jobPost));
+
+        assertThrows(IllegalStateException.class, () -> jobService.getJobApplications(100L, otherUser));
+    }
+
+    @Test
+    void testParseSalary_Empty() {
+        jobRequest.setSalary("");
+        when(companyRepository.findById(10L)).thenReturn(Optional.of(company));
+        when(jobPostRepository.save(any(JobPost.class))).thenReturn(jobPost);
+        jobService.createJob(jobRequest, employer);
+    }
+
+    @Test
+    void testParseSalary_Null() {
+        jobRequest.setSalary(null);
+        when(companyRepository.findById(10L)).thenReturn(Optional.of(company));
+        when(jobPostRepository.save(any(JobPost.class))).thenReturn(jobPost);
+        jobService.createJob(jobRequest, employer);
+    }
+
+    @Test
+    void testParseSalary_InvalidFormat() {
+        jobRequest.setSalary("invalid-format");
+        when(companyRepository.findById(10L)).thenReturn(Optional.of(company));
+        when(jobPostRepository.save(any(JobPost.class))).thenReturn(jobPost);
+        jobService.createJob(jobRequest, employer);
+    }
+
+    @Test
+    void testCreateJob_WithEmployerProfile() {
+        EmployerProfile profile = new EmployerProfile();
+        profile.setCompany(company);
+        when(employerProfileRepository.findByUserId(1L)).thenReturn(Optional.of(profile));
+        when(jobPostRepository.save(any(JobPost.class))).thenReturn(jobPost);
+        JobPostResponse response = jobService.createJob(jobRequest, employer);
+        assertNotNull(response);
     }
 }

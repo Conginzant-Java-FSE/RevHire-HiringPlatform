@@ -35,26 +35,26 @@ public class DashboardController {
 
 
             metrics.put("totalUsers", userRepository.count());
-            metrics.put("seekers", userRepository.countByRole(com.revhire.model.User.Role.JOB_SEEKER));
-            metrics.put("employers", userRepository.countByRole(com.revhire.model.User.Role.EMPLOYER));
+            metrics.put("seekers", userRepository.countByRole(com.example.revhirehiringplatform.model.User.Role.JOB_SEEKER));
+            metrics.put("employers", userRepository.countByRole(com.example.revhirehiringplatform.model.User.Role.EMPLOYER));
             metrics.put("activeUsers", userRepository.countByStatus(true));
             metrics.put("inactiveUsers", userRepository.countByStatus(false));
 
 
             metrics.put("totalJobs", jobPostRepository.count());
-            metrics.put("activeJobs", jobPostRepository.countByStatus(com.revhire.model.JobPost.JobStatus.ACTIVE));
-            metrics.put("closedJobs", jobPostRepository.countByStatus(com.revhire.model.JobPost.JobStatus.CLOSED));
+            metrics.put("activeJobs", jobPostRepository.countByStatus(com.example.revhirehiringplatform.model.JobPost.JobStatus.ACTIVE));
+            metrics.put("closedJobs", jobPostRepository.countByStatus(com.example.revhirehiringplatform.model.JobPost.JobStatus.CLOSED));
 
 
             metrics.put("totalApplications", applicationRepository.count());
             metrics.put("applied",
-                    applicationRepository.countByStatus(com.revhire.model.Application.ApplicationStatus.APPLIED));
+                    applicationRepository.countByStatus(com.example.revhirehiringplatform.model.Application.ApplicationStatus.APPLIED));
             metrics.put("shortlisted",
-                    applicationRepository.countByStatus(com.revhire.model.Application.ApplicationStatus.SHORTLISTED));
+                    applicationRepository.countByStatus(com.example.revhirehiringplatform.model.Application.ApplicationStatus.SHORTLISTED));
             metrics.put("selected",
-                    applicationRepository.countByStatus(com.revhire.model.Application.ApplicationStatus.SELECTED));
+                    applicationRepository.countByStatus(com.example.revhirehiringplatform.model.Application.ApplicationStatus.SELECTED));
             metrics.put("rejected",
-                    applicationRepository.countByStatus(com.revhire.model.Application.ApplicationStatus.REJECTED));
+                    applicationRepository.countByStatus(com.example.revhirehiringplatform.model.Application.ApplicationStatus.REJECTED));
 
             log.info("Admin metrics fetched successfully: {}", metrics);
             return ResponseEntity.ok(metrics);

@@ -167,7 +167,7 @@ public class ApplicationServiceTest {
     @Test
     void testSearchApplicantsForJob_FilterByAppliedAfter() {
         String oldDate = LocalDateTime.now().minusDays(5).toString() + "Z";
-        String futureDate = LocalDateTime.now().plusDays(1).toString() + "Z"; // App was 2 days ago
+        String futureDate = LocalDateTime.now().plusDays(1).toString() + "Z";
 
         List<ApplicationResponse> resultsMatch = applicationService.searchApplicantsForJob(
                 10L, null, null, null, null, oldDate, null, employer);
@@ -218,5 +218,45 @@ public class ApplicationServiceTest {
         com.example.revhirehiringplatform.dto.response.ApplicationSummaryResponse summary = applicationService
                 .getApplicationSummary(10L, employer);
         assertEquals(1, summary.getTotalApplications());
+    }
+
+    @Test
+    void testApplyForJob() {
+        when(profileRepository.findByUserId(2L)).thenReturn(Optional.of(profile));
+        when(jobPostRepository.findById(10L)).thenReturn(Optional.of(jobPost));
+        when(applicationRepository.findByJobSeekerId(profile.getId())).thenReturn(Collections.emptyList());
+        when(applicationRepository.save(org.mockito.ArgumentMatchers.any(Application.class))).thenAnswer(i -> {
+            Application app = i.getArgument(0);
+            app.setId(200L);
+            return app;
+        });
+
+        ApplicationResponse response = applicationService.applyForJob(10L, seeker);
+        assertEquals(10L, response.getJobId());
+    }
+
+    @Test
+    void testGetMyApplications() {
+        when(profileRepository.findByUserId(2L)).thenReturn(Optional.of(profile));
+        when(applicationRepository.findByJobSeekerId(profile.getId()))
+                .thenReturn(Collections.singletonList(application));
+        List<ApplicationResponse> apps = applicationService.getMyApplications(seeker);
+        assertEquals(1, apps.size());
+    }
+
+    @Test
+    void testGetApplicationsForEmployer() {
+        when(applicationRepository.findByJobPostCreatedBy(employer))
+                .thenReturn(Collections.singletonList(application));
+        List<ApplicationResponse> apps = applicationService.getApplicationsForEmployer(employer);
+        assertEquals(1, apps.size());
+    }
+
+    @Test
+    void testGetApplicationsForJob() {
+        when(jobPostRepository.findById(10L)).thenReturn(Optional.of(jobPost));
+        when(applicationRepository.findByJobPostId(10L)).thenReturn(Collections.singletonList(application));
+        List<ApplicationResponse> apps = applicationService.getApplicationsForJob(10L, employer);
+        assertEquals(1, apps.size());
     }
 }
