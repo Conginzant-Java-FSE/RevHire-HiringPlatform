@@ -82,4 +82,12 @@ public class EmailService {
                 + "Best regards,\nRevHire Team";
         sendEmail(toEmail, "RevHire Registration OTP", body);
     }
+
+    public void sendPasswordResetOtpEmail(String toEmail, String otp) {
+        String body = "We received a request to reset your RevHire password.\n\n"
+                + "Use this OTP to reset your password: " + otp + "\n\n"
+                + "This OTP expires in 5 minutes.\n\n"
+                + "If you did not request this, you can ignore this email.";
+        sendEmail(toEmail, "RevHire Password Reset OTP", body);
+    }
 }
