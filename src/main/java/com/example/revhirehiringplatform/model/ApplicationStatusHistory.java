@@ -23,10 +23,10 @@ public class ApplicationStatusHistory {
     @JoinColumn(name = "application_id", nullable = false)
     private Application application;
 
-    @Column(name = "old_status")
+    @Column(name = "old_status", length = 50)
     private String oldStatus;
 
-    @Column(name = "new_status")
+    @Column(name = "new_status", length = 50)
     private String newStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)

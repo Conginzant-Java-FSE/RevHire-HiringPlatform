@@ -8,7 +8,9 @@ public class JobPostResponse {
     private Long id;
     private String title;
     private String description;
+    private String responsibilities;
     private String requirements;
+    private String skills;
     private String location;
     private String salary;
     private String jobType;
@@ -21,4 +23,5 @@ public class JobPostResponse {
     private Integer openings;
     private String status;
     private Long applicantCount;
+    private String companyLogo;
 }

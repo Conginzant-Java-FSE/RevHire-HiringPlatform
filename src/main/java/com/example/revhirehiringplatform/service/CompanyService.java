@@ -23,6 +23,7 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final EmployerProfileRepository employerProfileRepository;
+    private final com.example.revhirehiringplatform.repository.UserRepository userRepository;
     private final com.example.revhirehiringplatform.repository.JobPostRepository jobPostRepository;
 
     @Transactional
@@ -33,7 +34,6 @@ public class CompanyService {
         if (companyDto.getId() != null) {
             company = companyRepository.findById(companyDto.getId())
                     .orElseThrow(() -> new RuntimeException(COMPANY_NOT_FOUND));
-
 
             if (company.getCreatedBy() != null && !company.getCreatedBy().getId().equals(user.getId())) {
                 throw new RuntimeException("Unauthorized to update this company");
@@ -48,15 +48,26 @@ public class CompanyService {
             company.setCreatedBy(user);
         }
 
+        // Update user personal details
+        if (companyDto.getUserName() != null && !companyDto.getUserName().isBlank()) {
+            user.setName(companyDto.getUserName());
+        }
+        if (companyDto.getUserPhone() != null && !companyDto.getUserPhone().isBlank()) {
+            user.setPhone(companyDto.getUserPhone());
+        }
+        userRepository.save(user);
+
         company.setName(companyDto.getName());
         company.setDescription(companyDto.getDescription());
         company.setWebsite(companyDto.getWebsite());
         company.setLocation(companyDto.getLocation());
         company.setIndustry(companyDto.getIndustry());
-        company.setSize(""); // Default or add to DTO
+        company.setSize(companyDto.getSize() != null ? companyDto.getSize() : "");
+        if (companyDto.getLogo() != null) {
+            company.setLogo(companyDto.getLogo());
+        }
 
         company = companyRepository.save(company);
-
 
         Optional<EmployerProfile> profileOpt = employerProfileRepository.findByUserId(user.getId());
         if (profileOpt.isEmpty()) {
@@ -96,12 +107,10 @@ public class CompanyService {
             throw new IllegalStateException("Unauthorized to delete this company");
         }
 
-
         if (!jobPostRepository.findByCompanyId(id).isEmpty()) {
             throw new IllegalStateException(
                     "Cannot delete company with active job posts. Please delete the jobs first.");
         }
-
 
         java.util.List<EmployerProfile> profiles = employerProfileRepository.findByCompanyId(id);
         employerProfileRepository.deleteAll(profiles);
@@ -118,6 +127,15 @@ public class CompanyService {
         dto.setWebsite(company.getWebsite());
         dto.setLocation(company.getLocation());
         dto.setIndustry(company.getIndustry());
+        dto.setSize(company.getSize());
+        dto.setLogo(company.getLogo());
+
+        User user = company.getCreatedBy();
+        if (user != null) {
+            dto.setUserName(user.getName());
+            dto.setUserEmail(user.getEmail());
+            dto.setUserPhone(user.getPhone());
+        }
         return dto;
     }
 }

@@ -1,10 +1,6 @@
 package com.example.revhirehiringplatform.controller;
 
-
-
 import com.example.revhirehiringplatform.dto.response.ApplicationResponse;
-import com.example.revhirehiringplatform.dto.request.ApplicationNoteRequest;
-import com.example.revhirehiringplatform.dto.response.ApplicationNoteResponse;
 import com.example.revhirehiringplatform.dto.response.ApplicationSummaryResponse;
 import com.example.revhirehiringplatform.model.Application;
 import com.example.revhirehiringplatform.model.User;
@@ -38,13 +34,30 @@ public class ApplicationController {
 
     @PostMapping("/apply/{jobId}")
     public ResponseEntity<?> applyForJob(@PathVariable("jobId") Long jobId,
-                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
             return ResponseEntity.status(403).body("Unauthorized");
         }
         try {
-            ApplicationResponse application = applicationService.applyForJob(jobId, user);
+            ApplicationResponse application = applicationService.applyForJob(jobId, user, null, null);
+            return ResponseEntity.ok(application);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/apply-v2")
+    public ResponseEntity<?> applyForJobV2(
+            @RequestBody com.example.revhirehiringplatform.dto.request.ApplicationRequest request,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
+            return ResponseEntity.status(403).body("Unauthorized");
+        }
+        try {
+            ApplicationResponse application = applicationService.applyForJob(
+                    request.getJobId(), user, request.getResumeFileId(), request.getCoverLetter());
             return ResponseEntity.ok(application);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -53,7 +66,7 @@ public class ApplicationController {
 
     @GetMapping("/check/{jobId}")
     public ResponseEntity<Boolean> hasApplied(@PathVariable("jobId") Long jobId,
-                                              @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
             return ResponseEntity.ok(false);
@@ -97,7 +110,7 @@ public class ApplicationController {
 
     @GetMapping("/job/{jobId}")
     public ResponseEntity<?> getApplicationsForJob(@PathVariable("jobId") Long jobId,
-                                                   @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -112,8 +125,8 @@ public class ApplicationController {
 
     @PutMapping("/{applicationId}/status")
     public ResponseEntity<?> updateStatus(@PathVariable("applicationId") Long applicationId,
-                                          @RequestParam("status") Application.ApplicationStatus status,
-                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @RequestParam("status") Application.ApplicationStatus status,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -128,8 +141,8 @@ public class ApplicationController {
 
     @PutMapping("/{applicationId}/withdraw")
     public ResponseEntity<?> withdrawApplication(@PathVariable("applicationId") Long applicationId,
-                                                 @RequestParam(required = false, name = "reason") String reason,
-                                                 @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @RequestParam(required = false, name = "reason") String reason,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.JOB_SEEKER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -167,13 +180,13 @@ public class ApplicationController {
 
     @GetMapping("/job/{jobId}/search")
     public ResponseEntity<?> searchApplicantsForJob(@PathVariable("jobId") Long jobId,
-                                                    @RequestParam(required = false, name = "name") String name,
-                                                    @RequestParam(required = false, name = "skill") String skill,
-                                                    @RequestParam(required = false, name = "experience") String experience,
-                                                    @RequestParam(required = false, name = "education") String education,
-                                                    @RequestParam(required = false, name = "appliedAfter") String appliedAfter,
-                                                    @RequestParam(required = false, name = "status") Application.ApplicationStatus status,
-                                                    @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @RequestParam(required = false, name = "name") String name,
+            @RequestParam(required = false, name = "skill") String skill,
+            @RequestParam(required = false, name = "experience") String experience,
+            @RequestParam(required = false, name = "education") String education,
+            @RequestParam(required = false, name = "appliedAfter") String appliedAfter,
+            @RequestParam(required = false, name = "status") Application.ApplicationStatus status,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -189,7 +202,7 @@ public class ApplicationController {
 
     @DeleteMapping("/{applicationId}")
     public ResponseEntity<?> deleteApplication(@PathVariable("applicationId") Long applicationId,
-                                               @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -204,7 +217,7 @@ public class ApplicationController {
 
     @GetMapping("/job/{jobId}/summary")
     public ResponseEntity<?> getApplicationSummary(@PathVariable("jobId") Long jobId,
-                                                   @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = getUserFromContext(userDetails);
         if (user == null || user.getRole() != User.Role.EMPLOYER) {
             return ResponseEntity.status(403).body("Unauthorized");
@@ -214,6 +227,42 @@ public class ApplicationController {
             return ResponseEntity.ok(summary);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{applicationId}/resume/download")
+    public ResponseEntity<?> downloadResume(@PathVariable("applicationId") Long applicationId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = getUserFromContext(userDetails);
+        if (user == null || user.getRole() != User.Role.EMPLOYER) {
+            return ResponseEntity.status(403).body("Unauthorized: Only Employers can download resumes.");
+        }
+        try {
+            org.springframework.core.io.Resource resource = applicationService.downloadResume(applicationId, user);
+            String filename = resource.getFilename();
+
+            // Try to determine content type
+            String contentType = "application/octet-stream";
+            if (filename != null) {
+                if (filename.endsWith(".pdf"))
+                    contentType = "application/pdf";
+                else if (filename.endsWith(".doc"))
+                    contentType = "application/msword";
+                else if (filename.endsWith(".docx"))
+                    contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + filename + "\"")
+                    .body(resource);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error downloading resume", e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

@@ -54,6 +54,9 @@ public class JobSeekerProfileService {
         profile.setSummary(profileDto.getSummary());
         profile.setLocation(profileDto.getLocation());
         profile.setEmploymentStatus(profileDto.getEmploymentStatus());
+        if (profileDto.getProfileImage() != null) {
+            profile.setProfileImage(profileDto.getProfileImage());
+        }
 
         JobSeekerProfile savedProfile = profileRepository.save(profile);
 
@@ -189,6 +192,14 @@ public class JobSeekerProfileService {
         dto.setJobSeekerEmail(app.getJobSeeker().getUser().getEmail());
         dto.setStatus(app.getStatus());
         dto.setAppliedAt(app.getAppliedAt());
+
+        if (app.getJobSeeker() != null) {
+            dto.setJobSeekerProfileImage(app.getJobSeeker().getProfileImage());
+        }
+        if (app.getJobPost() != null && app.getJobPost().getCompany() != null) {
+            dto.setCompanyLogo(app.getJobPost().getCompany().getLogo());
+        }
+
         return dto;
     }
 }

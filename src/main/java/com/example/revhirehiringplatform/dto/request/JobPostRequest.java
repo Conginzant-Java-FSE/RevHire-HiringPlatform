@@ -14,7 +14,9 @@ public class JobPostRequest {
     @NotBlank(message = "Description is required")
     private String description;
 
+    private String responsibilities;
     private String requirements;
+    private String skills;
     private String location;
 
     private String salary;

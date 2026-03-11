@@ -1,4 +1,5 @@
 package com.example.revhirehiringplatform.dto.request;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import lombok.Data;
@@ -16,9 +17,9 @@ public class CompanyRequest {
     private String industry;
     private String size;
 
-
     private String userName;
     @Email(message = "Invalid email format")
     private String userEmail;
     private String userPhone;
+    private String logo;
 }

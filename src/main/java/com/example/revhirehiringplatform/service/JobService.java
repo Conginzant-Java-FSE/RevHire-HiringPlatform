@@ -76,11 +76,19 @@ public class JobService {
         jobPost.setOpenings(jobPostDto.getOpenings() != null ? jobPostDto.getOpenings() : 1);
         jobPost.setCompany(company);
         jobPost.setCreatedBy(user);
+        jobPost.setResponsibilities(jobPostDto.getResponsibilities());
+        jobPost.setRequirements(jobPostDto.getRequirements());
         jobPost.setStatus(JobPost.JobStatus.ACTIVE);
+
+        log.info("Saving JobPost: id={}, responsibilities_len={}, requirements_len={}",
+                jobPost.getId(),
+                jobPost.getResponsibilities() != null ? jobPost.getResponsibilities().length() : "NULL",
+                jobPost.getRequirements() != null ? jobPost.getRequirements().length() : "NULL");
+
         JobPost savedJob = jobPostRepository.save(jobPost);
 
-        if (jobPostDto.getRequirements() != null && !jobPostDto.getRequirements().trim().isEmpty()) {
-            List<String> skillNames = Arrays.stream(jobPostDto.getRequirements().split(","))
+        if (jobPostDto.getSkills() != null && !jobPostDto.getSkills().trim().isEmpty()) {
+            List<String> skillNames = Arrays.stream(jobPostDto.getSkills().split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .toList();
@@ -176,6 +184,13 @@ public class JobService {
             job.setEducation(jobDto.getEducation());
         if (jobDto.getOpenings() != null)
             job.setOpenings(jobDto.getOpenings());
+        job.setResponsibilities(jobDto.getResponsibilities());
+        job.setRequirements(jobDto.getRequirements());
+
+        log.info("Updating JobPost: id={}, responsibilities_len={}, requirements_len={}",
+                job.getId(),
+                job.getResponsibilities() != null ? job.getResponsibilities().length() : "NULL",
+                job.getRequirements() != null ? job.getRequirements().length() : "NULL");
         if (jobDto.getStatus() != null) {
             try {
                 job.setStatus(JobPost.JobStatus.valueOf(jobDto.getStatus()));
@@ -185,8 +200,8 @@ public class JobService {
 
         JobPost updatedJob = jobPostRepository.save(job);
 
-        if (jobDto.getRequirements() != null && !jobDto.getRequirements().trim().isEmpty()) {
-            List<String> skillNames = Arrays.stream(jobDto.getRequirements().split(","))
+        if (jobDto.getSkills() != null && !jobDto.getSkills().trim().isEmpty()) {
+            List<String> skillNames = Arrays.stream(jobDto.getSkills().split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .toList();
@@ -256,7 +271,8 @@ public class JobService {
         List<com.example.revhirehiringplatform.model.SavedJobs> savedJobs = savedJobsRepository.findByJobPostId(id);
         savedJobsRepository.deleteAll(savedJobs);
 
-        List<com.example.revhirehiringplatform.model.Application> applications = applicationRepository.findByJobPostId(id);
+        List<com.example.revhirehiringplatform.model.Application> applications = applicationRepository
+                .findByJobPostId(id);
         for (com.example.revhirehiringplatform.model.Application app : applications) {
             List<com.example.revhirehiringplatform.model.ApplicationStatusHistory> histories = applicationStatusHistoryRepository
                     .findByApplicationIdOrderByChangedAtDesc(app.getId());
@@ -321,14 +337,13 @@ public class JobService {
         JobPostResponse dto = new JobPostResponse();
         dto.setId(jobPost.getId());
         dto.setTitle(jobPost.getTitle());
-        dto.setDescription(jobPost.getDescription());
+        dto.setResponsibilities(jobPost.getResponsibilities());
+        dto.setRequirements(jobPost.getRequirements());
 
-        List<JobSkillMap> skills = jobSkillMapRepository.findByJobPostId(jobPost.getId());
-        if (!skills.isEmpty()) {
-            dto.setRequirements(
-                    skills.stream().map(s -> s.getSkill().getSkillName()).collect(Collectors.joining(", ")));
-        } else {
-            dto.setRequirements(jobPost.getDescription());
+        List<JobSkillMap> skillMaps = jobSkillMapRepository.findByJobPostId(jobPost.getId());
+        if (!skillMaps.isEmpty()) {
+            dto.setSkills(
+                    skillMaps.stream().map(s -> s.getSkill().getSkillName()).collect(Collectors.joining(", ")));
         }
 
         dto.setLocation(jobPost.getLocation());
@@ -342,6 +357,7 @@ public class JobService {
         dto.setPostedDate(jobPost.getCreatedAt() != null ? jobPost.getCreatedAt().toLocalDate() : LocalDate.now());
         dto.setCompanyId(jobPost.getCompany().getId());
         dto.setCompanyName(jobPost.getCompany().getName());
+        dto.setCompanyLogo(jobPost.getCompany().getLogo());
         dto.setApplicantCount(applicationRepository.countByJobPostId(jobPost.getId()));
         return dto;
     }

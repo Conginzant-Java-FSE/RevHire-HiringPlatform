@@ -23,8 +23,8 @@ public class JobSearchService {
 
     @Transactional(readOnly = true)
     public List<JobPostResponse> searchJobs(String title, String location, Integer experience, String company,
-                                            Double salary,
-                                            List<String> jobTypes, Integer daysAgo) {
+            Double salary,
+            List<String> jobTypes, Integer daysAgo) {
         java.time.LocalDateTime startDate = null;
         if (daysAgo != null) {
             startDate = java.time.LocalDateTime.now().minusDays(daysAgo);
@@ -49,6 +49,7 @@ public class JobSearchService {
         dto.setPostedDate(jobPost.getCreatedAt() != null ? jobPost.getCreatedAt().toLocalDate() : LocalDate.now());
         dto.setCompanyId(jobPost.getCompany().getId());
         dto.setCompanyName(jobPost.getCompany().getName());
+        dto.setCompanyLogo(jobPost.getCompany().getLogo());
         dto.setExperienceYears(jobPost.getExperienceYears());
         dto.setEducation(jobPost.getEducation());
         dto.setOpenings(jobPost.getOpenings());

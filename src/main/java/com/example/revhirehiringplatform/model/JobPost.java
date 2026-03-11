@@ -1,7 +1,5 @@
 package com.example.revhirehiringplatform.model;
 
-
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -52,6 +50,12 @@ public class JobPost {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(columnDefinition = "TEXT")
+    private String responsibilities;
+
+    @Column(name = "requirements_text", columnDefinition = "TEXT")
+    private String requirements;
 
     @Column(name = "experience_years")
     private Integer experienceYears;
