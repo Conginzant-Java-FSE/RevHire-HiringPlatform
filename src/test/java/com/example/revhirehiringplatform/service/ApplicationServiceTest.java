@@ -1,7 +1,5 @@
 package com.example.revhirehiringplatform.service;
 
-
-
 import com.example.revhirehiringplatform.dto.response.ApplicationResponse;
 import com.example.revhirehiringplatform.model.Application;
 import com.example.revhirehiringplatform.model.JobPost;
@@ -231,7 +229,7 @@ public class ApplicationServiceTest {
             return app;
         });
 
-        ApplicationResponse response = applicationService.applyForJob(10L, seeker);
+        ApplicationResponse response = applicationService.applyForJob(10L, seeker, null, null);
         assertEquals(10L, response.getJobId());
     }
 
