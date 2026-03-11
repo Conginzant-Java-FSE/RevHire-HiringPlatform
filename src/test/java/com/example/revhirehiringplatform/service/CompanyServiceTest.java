@@ -9,6 +9,7 @@ import com.example.revhirehiringplatform.model.User;
 import com.example.revhirehiringplatform.repository.CompanyRepository;
 import com.example.revhirehiringplatform.repository.EmployerProfileRepository;
 import com.example.revhirehiringplatform.repository.JobPostRepository;
+import com.example.revhirehiringplatform.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +34,8 @@ public class CompanyServiceTest {
     private EmployerProfileRepository employerProfileRepository;
     @Mock
     private JobPostRepository jobPostRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private CompanyService companyService;
@@ -62,6 +65,7 @@ public class CompanyServiceTest {
         when(companyRepository.findByCreatedByOrderByNameAsc(user)).thenReturn(new ArrayList<>());
         when(companyRepository.save(any(Company.class))).thenReturn(company);
         when(employerProfileRepository.findByUserId(user.getId())).thenReturn(Optional.empty());
+        when(userRepository.save(user)).thenReturn(user);
 
         CompanyResponse response = companyService.createOrUpdateCompanyProfile(companyRequest, user);
 
@@ -83,6 +87,7 @@ public class CompanyServiceTest {
         companyRequest.setId(10L);
         when(companyRepository.findById(10L)).thenReturn(Optional.of(company));
         when(companyRepository.save(any(Company.class))).thenReturn(company);
+        when(userRepository.save(user)).thenReturn(user);
 
         CompanyResponse response = companyService.createOrUpdateCompanyProfile(companyRequest, user);
 
@@ -95,6 +100,6 @@ public class CompanyServiceTest {
         when(companyRepository.findById(10L)).thenReturn(Optional.of(company));
         when(jobPostRepository.findByCompanyId(10L)).thenReturn(List.of(new com.example.revhirehiringplatform.model.JobPost()));
 
-        assertThrows(RuntimeException.class, () -> companyService.deleteCompany(10L, user));
+        assertThrows(IllegalStateException.class, () -> companyService.deleteCompany(10L, user));
     }
 }

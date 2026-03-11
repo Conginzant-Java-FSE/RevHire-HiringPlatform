@@ -190,7 +190,7 @@ public class JobServiceTest {
 
     @Test
     void testCreateJob_WithRequirements() {
-        jobRequest.setRequirements("Java, Spring Boot");
+        jobRequest.setSkills("Java, Spring Boot");
         when(companyRepository.findById(10L)).thenReturn(Optional.of(company));
         when(jobPostRepository.save(any(JobPost.class))).thenReturn(jobPost);
 
@@ -222,7 +222,7 @@ public class JobServiceTest {
 
     @Test
     void testUpdateJob_WithRequirements() {
-        jobRequest.setRequirements("Java");
+        jobRequest.setSkills("Java");
         when(jobPostRepository.findById(100L)).thenReturn(Optional.of(jobPost));
         when(jobPostRepository.save(any(JobPost.class))).thenReturn(jobPost);
 

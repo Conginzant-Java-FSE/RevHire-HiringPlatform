@@ -61,7 +61,7 @@ public class ApplicationControllerTest {
     @WithMockUser(roles = "JOB_SEEKER")
     void testApplyForJob() throws Exception {
         when(userRepository.findById(any())).thenReturn(Optional.of(seeker));
-        when(applicationService.applyForJob(any(), any())).thenReturn(new ApplicationResponse());
+        when(applicationService.applyForJob(any(), any(), any(), any())).thenReturn(new ApplicationResponse());
 
         mockMvc.perform(post("/api/applications/apply/100")
                         .with(csrf())
