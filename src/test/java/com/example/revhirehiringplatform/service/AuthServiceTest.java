@@ -131,13 +131,13 @@ class AuthServiceTest {
         when(passwordResetTokenRepository.findByUser(testUser)).thenReturn(Optional.empty());
         when(passwordResetTokenRepository.save(any(PasswordResetToken.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        doNothing().when(emailService).sendPasswordResetEmail(eq("test@example.com"), anyString());
+        doNothing().when(emailService).sendPasswordResetOtpEmail(eq("test@example.com"), anyString());
 
         assertDoesNotThrow(() -> authService.initiatePasswordReset("test@example.com"));
 
         verify(passwordResetTokenRepository).findByUser(testUser);
         verify(passwordResetTokenRepository).save(any(PasswordResetToken.class));
-        verify(emailService).sendPasswordResetEmail(eq("test@example.com"), anyString());
+        verify(emailService).sendPasswordResetOtpEmail(eq("test@example.com"), anyString());
     }
 
     @Test
@@ -147,13 +147,13 @@ class AuthServiceTest {
         when(passwordResetTokenRepository.findByUser(testUser)).thenReturn(Optional.of(existing));
         when(passwordResetTokenRepository.save(any(PasswordResetToken.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        doNothing().when(emailService).sendPasswordResetEmail(eq("test@example.com"), anyString());
+        doNothing().when(emailService).sendPasswordResetOtpEmail(eq("test@example.com"), anyString());
 
         assertDoesNotThrow(() -> authService.initiatePasswordReset("test@example.com"));
 
         verify(passwordResetTokenRepository).findByUser(testUser);
         verify(passwordResetTokenRepository).save(existing);
-        verify(emailService).sendPasswordResetEmail(eq("test@example.com"), anyString());
+        verify(emailService).sendPasswordResetOtpEmail(eq("test@example.com"), anyString());
         assertNotEquals("old-token", existing.getToken());
         assertTrue(existing.getExpiryDate().isAfter(LocalDateTime.now()));
     }

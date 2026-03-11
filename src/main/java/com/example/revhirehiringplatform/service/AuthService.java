@@ -60,24 +60,23 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
-        String token = java.util.UUID.randomUUID().toString();
+        String token = String.format("%06d", new java.util.Random().nextInt(999999));
         com.example.revhirehiringplatform.model.PasswordResetToken resetToken = passwordResetTokenRepository.findByUser(user)
                 .map(existing -> {
                     existing.setToken(token);
-                    existing.setExpiryDate(java.time.LocalDateTime.now().plusMinutes(30));
+                    existing.setExpiryDate(java.time.LocalDateTime.now().plusMinutes(5));
                     return existing;
                 })
-                .orElseGet(() -> new com.example.revhirehiringplatform.model.PasswordResetToken(token, user, 30));
+                .orElseGet(() -> new com.example.revhirehiringplatform.model.PasswordResetToken(token, user, 5));
 
         passwordResetTokenRepository.save(resetToken);
 
-        String resetLink = frontendUrl + "/reset-password?token=" + token;
         try {
-            emailService.sendPasswordResetEmail(user.getEmail(), resetLink);
-            log.info("Password reset email sent for {}", email);
+            emailService.sendPasswordResetOtpEmail(user.getEmail(), token);
+            log.info("Password reset OTP sent for {}", email);
         } catch (Exception ex) {
-            log.error("Password reset email failed for {}", email, ex);
-            throw new RuntimeException("Failed to send reset email", ex);
+            log.error("Password reset OTP email failed for {}", email, ex);
+            throw new RuntimeException("Failed to send OTP email", ex);
         }
     }
 
