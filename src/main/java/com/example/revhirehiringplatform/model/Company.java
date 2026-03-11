@@ -37,6 +37,9 @@ public class Company {
     private String website;
     private String location;
 
+    @Column(name = "logo", columnDefinition = "MEDIUMTEXT")
+    private String logo;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -74,6 +74,7 @@ public class SavedJobsService {
         dto.setJobType(jobPost.getJobType());
         dto.setPostedDate(jobPost.getCreatedAt() != null ? jobPost.getCreatedAt().toLocalDate() : LocalDate.now());
         dto.setCompanyName(jobPost.getCompany().getName());
+        dto.setCompanyLogo(jobPost.getCompany().getLogo());
         return dto;
     }
 }

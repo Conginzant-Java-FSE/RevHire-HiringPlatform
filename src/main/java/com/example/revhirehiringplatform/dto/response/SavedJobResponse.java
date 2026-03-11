@@ -9,4 +9,5 @@ public class SavedJobResponse {
     private String jobTitle;
     private String companyName;
     private String jobLocation;
+    private String companyLogo;
 }

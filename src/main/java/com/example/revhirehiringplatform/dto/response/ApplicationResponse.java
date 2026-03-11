@@ -18,5 +18,8 @@ public class ApplicationResponse {
     private String jobSeekerEducation;
     private ApplicationStatus status;
     private String withdrawReason;
+    private String coverLetter;
     private LocalDateTime appliedAt;
+    private String jobSeekerProfileImage;
+    private String companyLogo;
 }

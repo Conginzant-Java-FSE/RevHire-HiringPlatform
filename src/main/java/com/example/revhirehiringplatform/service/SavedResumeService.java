@@ -36,11 +36,16 @@ public class SavedResumeService {
         com.example.revhirehiringplatform.model.JobPost jobPost = jobPostRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
         if (jobPost.getCreatedBy() == null || !jobPost.getCreatedBy().getId().equals(employer.getId())) {
+            log.error("Save resume UNAUTHORIZED: JobPost createdBy={}, Employer={}",
+                    jobPost.getCreatedBy() != null ? jobPost.getCreatedBy().getId() : "NULL",
+                    employer.getId());
             throw new RuntimeException("Unauthorized to save resume for this job");
         }
 
-        if (savedResumeRepository.existsByEmployerIdAndJobSeekerIdAndJobPostId(employer.getId(), profile.getId(), jobId)) {
-            log.warn("Resume already saved: employerId={}, profileId={}, jobId={}", employer.getId(), profile.getId(), jobId);
+        if (savedResumeRepository.existsByEmployerIdAndJobSeekerIdAndJobPostId(employer.getId(), profile.getId(),
+                jobId)) {
+            log.warn("Resume already saved: employerId={}, profileId={}, jobId={}", employer.getId(), profile.getId(),
+                    jobId);
             throw new RuntimeException("Resume already saved by this employer");
         }
 
@@ -101,7 +106,7 @@ public class SavedResumeService {
                         dto.setJobId(savedResume.getJobPost().getId());
                     } else {
                         applicationRepository.findTopByJobSeekerIdAndJobPostCreatedByIdOrderByAppliedAtDesc(
-                                        profile.getId(), employer.getId())
+                                profile.getId(), employer.getId())
                                 .ifPresent(app -> {
                                     dto.setAppliedRole(app.getJobPost().getTitle());
                                     dto.setJobId(app.getJobPost().getId());

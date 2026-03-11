@@ -11,7 +11,6 @@ public class JobSeekerProfileRequest {
     private String phone;
     private String employmentStatus;
 
-
     private String title;
     private String objective;
     private String education;
@@ -19,4 +18,5 @@ public class JobSeekerProfileRequest {
     private String skills;
     private String projects;
     private String certifications;
+    private String profileImage;
 }

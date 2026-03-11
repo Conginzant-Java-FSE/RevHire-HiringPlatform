@@ -38,6 +38,7 @@ public class Application {
     private String coverLetter;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 50)
     private ApplicationStatus status = ApplicationStatus.APPLIED;
 
     @JsonIgnore

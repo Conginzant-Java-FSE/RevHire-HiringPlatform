@@ -56,6 +56,9 @@ public class JobSeekerProfile {
     private String headline;
     private String summary;
 
+    @Column(name = "profile_image", columnDefinition = "MEDIUMTEXT")
+    private String profileImage;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

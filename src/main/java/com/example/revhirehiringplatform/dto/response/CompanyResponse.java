@@ -1,4 +1,5 @@
 package com.example.revhirehiringplatform.dto.response;
+
 import lombok.Data;
 
 @Data
@@ -15,4 +16,5 @@ public class CompanyResponse {
     private String userName;
     private String userEmail;
     private String userPhone;
+    private String logo;
 }
